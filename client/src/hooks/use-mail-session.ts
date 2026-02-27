@@ -122,6 +122,28 @@ export const useMailSession = () => {
     return () => unsubscribe();
   }, [currentEmail, isPaused, token]);
 
+  // Polling REAL (si hay token)
+useEffect(() => {
+  if (!token || isPaused) return;
+
+  const interval = setInterval(async () => {
+    try {
+      const res = await fetch(
+        `https://tempmail-backend-production.up.railway.app/api/inbox?token=${token}`
+      );
+
+      const data = await res.json();
+
+      if (Array.isArray(data.messages)) {
+        setInbox(data.messages);
+      }
+    } catch (err) {
+      console.error("Error obteniendo inbox:", err);
+    }
+  }, 4000);
+
+  return () => clearInterval(interval);
+}, [token, isPaused]);
   const restoreFromHistory = useCallback(
     (emailToRestore: string) => {
       const item = history.find((h) => h.email === emailToRestore);
