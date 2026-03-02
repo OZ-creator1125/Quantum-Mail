@@ -122,20 +122,28 @@ export const useMailSession = () => {
     return () => unsubscribe();
   }, [currentEmail, isPaused, token]);
 
-  // Polling REAL (si hay token)
+ // Polling REAL (si hay token)
 useEffect(() => {
   if (!token || isPaused) return;
 
   const interval = setInterval(async () => {
     try {
       const res = await fetch(
-        `https://tempmail-backend-production.up.railway.app/api/inbox?token=${token}`
+        `https://tempmail-backend-production.up.railway.app/api/inbox`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
 
-      if (Array.isArray(data.messages)) {
-        setInbox(data.messages);
+      // ✅ soporta ambos formatos por si tu backend cambia
+      const list =
+        data?.["hydra:member"] ??
+        data?.messages ??
+        data?.data ??
+        data;
+
+      if (Array.isArray(list)) {
+        setInbox(list);
       }
     } catch (err) {
       console.error("Error obteniendo inbox:", err);
@@ -143,7 +151,8 @@ useEffect(() => {
   }, 4000);
 
   return () => clearInterval(interval);
-}, [token, isPaused]);
+}, [token, isPaused]);  
+  
   const restoreFromHistory = useCallback(
     (emailToRestore: string) => {
       const item = history.find((h) => h.email === emailToRestore);
