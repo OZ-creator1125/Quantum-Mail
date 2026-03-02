@@ -122,25 +122,25 @@ export const useMailSession = () => {
     return () => unsubscribe();
   }, [currentEmail, isPaused, token]);
 
- // Polling REAL (si hay token)
+// ✅ Polling REAL (si hay token)
 useEffect(() => {
   if (!token || isPaused) return;
 
-  const interval = setInterval(async () => {
+  const tick = async () => {
     try {
       const res = await fetch(
-        `https://tempmail-backend-production.up.railway.app/api/inbox`,
+        "https://tempmail-backend-production.up.railway.app/api/inbox",
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       const data = await res.json();
 
-      // ✅ soporta ambos formatos por si tu backend cambia
+      // soporta varios formatos
       const list =
-        data?.["hydra:member"] ??
         data?.messages ??
+        data?.["hydra:member"] ??
         data?.data ??
-        data;
+        [];
 
       if (Array.isArray(list)) {
         setInbox(list);
@@ -148,7 +148,12 @@ useEffect(() => {
     } catch (err) {
       console.error("Error obteniendo inbox:", err);
     }
-  }, 4000);
+  };
+
+  // ✅ 1) dispara una vez inmediato
+  tick();
+  // ✅ 2) luego cada 4 segundos
+  const interval = setInterval(tick, 4000);
 
   return () => clearInterval(interval);
 }, [token, isPaused]);  
