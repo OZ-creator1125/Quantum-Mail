@@ -22,12 +22,10 @@ export default function Home() {
   const {
     currentEmail,
     inbox,
-    history,
     timeLeft,
     isPaused,
     togglePause,
     handleReset,
-    restoreFromHistory,
     setRealSession,
   } = useMailSession();
 
