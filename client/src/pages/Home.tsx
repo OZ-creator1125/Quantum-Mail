@@ -8,7 +8,6 @@ import {
   Pause,
   Play,
   RefreshCw,
-  Clock,
   Inbox as InboxIcon,
   ArchiveRestore,
   Check,
@@ -238,7 +237,7 @@ export default function Home() {
                               {msg.sender}
                             </div>
                             <div className="text-xs text-muted-foreground font-mono">
-                              {msg.timestamp.toLocaleString()}
+                                {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
                             </div>
                           </div>
                           <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
