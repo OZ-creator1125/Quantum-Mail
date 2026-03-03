@@ -134,7 +134,8 @@ useEffect(() => {
       );
 
       const data = await res.json();
-
+      console.log("📩 INBOX RAW:", data);
+      
       // soporta varios formatos
       const list =
         data?.messages ??
