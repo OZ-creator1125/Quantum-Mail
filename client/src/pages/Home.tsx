@@ -24,14 +24,16 @@ export default function Home() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-
+  const [showCopiedBanner, setShowCopiedBanner] = useState(false);
   const handleRealNew = async () => {
     try {
       const s = await createSession();
       await navigator.clipboard.writeText(s.address);
       // copy automatically
 await navigator.clipboard.writeText(s.address);
-
+      setShowCopiedBanner(true);
+setTimeout(() => setShowCopiedBanner(false), 3000);
+      
 // show notification + change COPY button state
 setCopied(true);
 
@@ -75,6 +77,11 @@ setTimeout(() => setCopied(false), 2000);
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+      {showCopiedBanner && (
+  <div className="w-full bg-green-500 text-black font-bold text-center py-2 mb-4 rounded-md animate-pulse">
+    NEW EMAIL GENERATED AND COPIED
+  </div>
+)}
       {/* Header */}
       <header className="flex items-center gap-3 mb-8">
         <ShieldAlert className="w-8 h-8 text-primary" />
