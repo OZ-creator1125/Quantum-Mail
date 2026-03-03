@@ -28,6 +28,7 @@ export default function Home() {
   const handleRealNew = async () => {
     try {
       const s = await createSession();
+      await navigator.clipboard.writeText(s.address);
       console.log("SESSION REAL:", s);
 
       toast({
