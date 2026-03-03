@@ -148,9 +148,17 @@ useEffect(() => {
         [];
 
       if (Array.isArray(list)) {
-        setInbox(list);
-      }
-    } catch (err) {
+  const mapped = list.map((m: any) => ({
+    id: m.id ?? m["@id"] ?? crypto.randomUUID(),
+    sender: m?.from?.address ?? "unknown",
+    subject: m?.subject ?? "(sin asunto)",
+    preview: m?.intro ?? "",
+    body: m?.intro ?? "", // por ahora, luego lo mejoramos
+    timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+  }));
+
+  setInbox(mapped);
+}    } catch (err) {
       console.error("Error obteniendo inbox:", err);
     }
   };
