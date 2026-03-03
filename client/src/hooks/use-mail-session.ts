@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import {
-  generateEmail,
-  subscribeRealtime,
-  EmailMessage,
-} from "../lib/mock-api";
+import { generateEmail,EmailMessage } from "../lib/mock-api";
+import { createSession } from "@/lib/api";
 
 export interface HistoryItem {
   email: string;
@@ -71,23 +68,41 @@ export const useMailSession = () => {
       }),
     );
   }, [currentEmail, token, inbox, history, timeLeft, isPaused]);
-
-  const handleReset = useCallback(() => {
-    setHistory((prev) => {
-      const newHistory = [
-        { email: currentEmail, createdAt: Date.now(), inbox },
-        ...prev,
-      ].slice(0, 10);
-      return newHistory;
-    });
-
-    const newEmail = generateEmail();
-    setCurrentEmail(newEmail);
-    setToken("");
+  
+const handleReset = useCallback(async () => {
+  try {
+    // 1) borra todo en pantalla
     setInbox([]);
-    setTimeLeft(600);
+    setHistory([]);
+    setToken("");    
     setIsPaused(false);
-  }, [currentEmail, inbox]);
+    setTimeLeft(600);
+
+    // 2) crea un email REAL nuevo
+    const s = await createSession(); // { address, token }
+
+    // 3) cambia al email real
+    setCurrentEmail(s.address);
+    setToken(s.token);
+
+    // 4) guarda limpio en localStorage
+    localStorage.setItem(
+      "quantum_session",
+      JSON.stringify({
+        currentEmail: s.address,
+        token: s.token,
+        inbox: [],
+        history: [],
+        timeLeft: 600,
+        isPaused: false,
+        lastSaved: Date.now(),
+      })
+    );
+  } catch (e) {
+    console.error("RESET REAL ERROR:", e);
+  }
+}, []);  
+  
   // Timer logic
   useEffect(() => {
     // Siempre limpia el intervalo anterior
@@ -110,17 +125,6 @@ export const useMailSession = () => {
     };
   }, [isPaused, currentEmail, timeLeft, handleReset]);
 
-  // Realtime Subscription
-  // Realtime Subscription (MOCK solo si NO hay token)
-  useEffect(() => {
-    if (!currentEmail || isPaused || token) return;
-
-    const unsubscribe = subscribeRealtime(currentEmail, (newMsg) => {
-      setInbox((prev) => [newMsg, ...prev]);
-    });
-
-    return () => unsubscribe();
-  }, [currentEmail, isPaused, token]);
 
 // ✅ Polling REAL (si hay token)
 useEffect(() => {
@@ -159,28 +163,6 @@ useEffect(() => {
   return () => clearInterval(interval);
 }, [token, isPaused]);  
   
-  const restoreFromHistory = useCallback(
-    (emailToRestore: string) => {
-      const item = history.find((h) => h.email === emailToRestore);
-      if (!item) return;
-
-      setHistory((prev) => {
-        const filtered = prev.filter((h) => h.email !== emailToRestore);
-        return [
-          { email: currentEmail, createdAt: Date.now(), inbox },
-          ...filtered,
-        ].slice(0, 10);
-      });
-
-      setCurrentEmail(item.email);
-      setToken("");
-      setInbox(item.inbox);
-      setTimeLeft(600);
-      setIsPaused(false);
-    },
-    [currentEmail, history, inbox],
-  );
-
   const togglePause = () => setIsPaused(!isPaused);
   const addExtraTime = () => setTimeLeft(600);
 
@@ -224,7 +206,6 @@ useEffect(() => {
     isPaused,
     togglePause,
     handleReset,
-    restoreFromHistory,
     addExtraTime,
     setRealSession,
   };
