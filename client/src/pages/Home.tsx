@@ -9,7 +9,6 @@ import {
   Play,
   RefreshCw,
   Inbox as InboxIcon,
-  ArchiveRestore,
   Check,
   ChevronLeft,
   ShieldAlert,
@@ -152,158 +151,113 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content: Inbox & History */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[500px]">
-        {/* Inbox Section */}
-        <div className="lg:col-span-2 glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20">
-          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
-            <InboxIcon className="w-5 h-5 text-primary" />
-            <h2 className="font-display tracking-widest text-lg">
-              SECURE_INBOX{" "}
-              <span className="text-primary text-sm">({inbox.length})</span>
-            </h2>
-            {isPaused && (
-              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
-                Receiving Paused
-              </span>
-            )}
-          </div>
+     {/* Main Content */}
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[500px]">
+  {/* Inbox Section */}
+  <div className="glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20">
+    <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+      <InboxIcon className="w-5 h-5 text-primary" />
+      <h2 className="font-display tracking-widest text-lg">
+        SECURE_INBOX{" "}
+        <span className="text-primary text-sm">({inbox.length})</span>
+      </h2>
+      {isPaused && (
+        <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+          Receiving Paused
+        </span>
+      )}
+    </div>
 
-          <ScrollArea className="flex-1 p-0">
-            <AnimatePresence mode="wait">
-              {selectedEmail ? (
-                <motion.div
-                  key="detail"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="p-6"
-                >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
-                    onClick={() => setSelectedEmail(null)}
-                  >
-                    <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
-                  </Button>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        From
-                      </div>
-                      <div className="text-lg font-mono text-primary">
-                        {selectedEmail.sender}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        Subject
-                      </div>
-                      <div className="text-xl font-bold text-white">
-                        {selectedEmail.subject}
-                      </div>
-                    </div>
-                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
-                      {selectedEmail.body}
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div key="list" className="p-2 h-full">
-                  {inbox.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                      <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
-                      <p className="font-mono text-sm uppercase tracking-widest">
-                        Awaiting transmissions...
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {inbox.map((msg, idx) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.05 }}
-                          className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
-                          onClick={() => setSelectedEmail(msg)}
-                          data-testid={`row-email-${msg.id}`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="font-mono text-sm text-primary truncate max-w-[70%]">
-                              {msg.sender}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-mono">
-                                {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
-                            </div>
-                          </div>
-                          <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
-                            {msg.subject}
-                          </div>
-                          <div className="text-sm text-muted-foreground truncate">
-                            {msg.preview}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </ScrollArea>
-        </div>
-
-        {/* History Section */}
-        <div className="glass-panel rounded-xl flex flex-col overflow-hidden border-accent/20">
-          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
-            <ArchiveRestore className="w-5 h-5 text-accent" />
-            <h2 className="font-display tracking-widest text-lg">ARCHIVES</h2>
-          </div>
-          <ScrollArea className="flex-1 p-2">
-            {history.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                <p className="font-mono text-xs uppercase tracking-widest text-center px-4">
-                  No previous sessions found in local memory.
+    <ScrollArea className="flex-1 p-0">
+      <AnimatePresence mode="wait">
+        {selectedEmail ? (
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="p-6"
+          >
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
+              onClick={() => setSelectedEmail(null)}
+            >
+              <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
+            </Button>
+            <div className="space-y-4">
+              <div>
+                <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                  From
+                </div>
+                <div className="text-lg font-mono text-primary">
+                  {selectedEmail.sender}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                  Subject
+                </div>
+                <div className="text-xl font-bold text-white">
+                  {selectedEmail.subject}
+                </div>
+              </div>
+              <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+                {selectedEmail.body}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div key="list" className="p-2 h-full">
+            {inbox.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
+                <p className="font-mono text-sm uppercase tracking-widest">
+                  Awaiting transmissions...
                 </p>
               </div>
             ) : (
               <div className="space-y-2">
-                {history.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="p-3 bg-black/40 border border-white/5 rounded-lg flex flex-col gap-2 transition-all hover:border-white/20"
+                {inbox.map((msg, idx) => (
+                  <motion.div
+                    key={msg.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    onClick={() => setSelectedEmail(msg)}
+                    data-testid={`row-email-${msg.id}`}
                   >
-                    <div
-                      className="font-mono text-sm text-gray-300 truncate"
-                      title={item.email}
-                    >
-                      {item.email}
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-mono text-sm text-primary truncate max-w-[70%]">
+                        {msg.sender}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-mono">
+                        {msg.timestamp
+                          ? new Date(msg.timestamp as any).toLocaleString()
+                          : ""}
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {item.inbox.length} msgs
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 text-xs gap-1 font-display tracking-widest text-accent hover:text-accent hover:bg-accent/10"
-                        onClick={() => {
-                          restoreFromHistory(item.email);
-                          setSelectedEmail(null);
-                        }}
-                        data-testid={`button-restore-${idx}`}
-                      >
-                        RESTORE
-                      </Button>
+                    <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
+                      {msg.subject}
                     </div>
-                  </div>
+                    <div className="text-sm text-muted-foreground truncate">
+                      {msg.preview}
+                    </div>
+                  </motion.div>
                 ))}
               </div>
             )}
-          </ScrollArea>
-        </div>
-      </div>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </ScrollArea>
+    </div> {/* fin Inbox Section */}
+
+</div> {/* fin Main Content */}
+
+</div> {/* fin contenedor principal */}
+
   );
 }
