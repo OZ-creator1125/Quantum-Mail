@@ -29,14 +29,19 @@ export default function Home() {
     try {
       const s = await createSession();
       await navigator.clipboard.writeText(s.address);
-      console.log("SESSION REAL:", s);
+      // copy automatically
+await navigator.clipboard.writeText(s.address);
 
-      toast({
-        title: "✅ Nuevo email real creado",
-        description: s.address,
-        className: "bg-primary text-primary-foreground font-display",
-      });
+// show notification + change COPY button state
+setCopied(true);
 
+toast({
+  title: "✅ Email copied to clipboard",
+  description: "You can now paste it anywhere (Ctrl+V / Cmd+V)",
+  className: "bg-primary text-primary-foreground font-display",
+});
+
+setTimeout(() => setCopied(false), 2000);
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
     } catch (err: any) {
