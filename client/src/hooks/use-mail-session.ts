@@ -27,8 +27,8 @@ export const useMailSession = () => {
       emailToUse = parsed.currentEmail;
       setToken(parsed.token || "");
       setInbox(parsed.inbox || []);
-      setHistory(parsed.history || []);
-
+      setHistory([]); // ✅ nunca cargues historial
+      
       const elapsed = Math.floor((Date.now() - parsed.lastSaved) / 1000);
       const newTime = parsed.isPaused
         ? parsed.timeLeft
@@ -56,21 +56,23 @@ export const useMailSession = () => {
     if (!currentEmail) return;
 
     localStorage.setItem(
-      "quantum_session",
-      JSON.stringify({
-        currentEmail,
-        token,
-        inbox,
-        history,
-        timeLeft,
-        isPaused,
-        lastSaved: Date.now(),
-      }),
+  "quantum_session",
+  JSON.stringify({
+    currentEmail,
+    token,
+    inbox,
+    history: [], // ✅ siempre vacío
+    timeLeft,
+    isPaused,
+    lastSaved: Date.now(),
+  })
     );
   }, [currentEmail, token, inbox, history, timeLeft, isPaused]);
   
 const handleReset = useCallback(async () => {
   try {
+    localStorage.removeItem("quantum_session");
+    
     // 1) borra todo en pantalla
     setInbox([]);
     setHistory([]);
@@ -92,7 +94,6 @@ const handleReset = useCallback(async () => {
         currentEmail: s.address,
         token: s.token,
         inbox: [],
-        history: [],
         timeLeft: 600,
         isPaused: false,
         lastSaved: Date.now(),
@@ -174,42 +175,37 @@ useEffect(() => {
   const togglePause = () => setIsPaused(!isPaused);
   const addExtraTime = () => setTimeLeft(600);
 
-  const setRealSession = useCallback(
-    (session: { address: string; token: string }) => {
-      const newHistory = [
-        { email: currentEmail, createdAt: Date.now(), inbox },
-        ...history,
-      ].slice(0, 10);
-      setHistory(newHistory);
+const setRealSession = useCallback(
+  (session: { address: string; token: string }) => {
+    // ✅ NUNCA guardar historial
+    setHistory([]);
 
-      setCurrentEmail(session.address);
-      setToken(session.token);
+    setCurrentEmail(session.address);
+    setToken(session.token);
 
-      setInbox([]);
-      setTimeLeft(600);
-      setIsPaused(false);
+    setInbox([]);
+    setTimeLeft(600);
+    setIsPaused(false);
 
-      localStorage.setItem(
-        "quantum_session",
-        JSON.stringify({
-          currentEmail: session.address,
-          token: session.token,
-          inbox: [],
-          history: newHistory,
-          timeLeft: 600,
-          isPaused: false,
-          lastSaved: Date.now(),
-        }),
-      );
-    },
-    [currentEmail, inbox, history],
-  );
-
+    localStorage.setItem(
+      "quantum_session",
+      JSON.stringify({
+        currentEmail: session.address,
+        token: session.token,
+        inbox: [],
+        history: [], // ✅ siempre vacío
+        timeLeft: 600,
+        isPaused: false,
+        lastSaved: Date.now(),
+      }),
+    );
+  },
+  [],
+);
   return {
     currentEmail,
     token,
     inbox,
-    history,
     timeLeft,
     isPaused,
     togglePause,
