@@ -254,11 +254,10 @@ export default function Home() {
       </motion.div>
     )}
   </AnimatePresence>
-      
-    </ScrollArea>
-  </div> {/* fin Inbox Section */}
-</div> {/* fin Main Content */}
-</div> {/* fin contenedor principal del return */}
+       </ScrollArea>
+  </div> 
+</div> 
+</div> 
 
   );
 }
