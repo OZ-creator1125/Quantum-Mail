@@ -22,9 +22,11 @@ export default function Home() {
     useMailSession();
 
   const { toast } = useToast();
+
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
 
+  // premium banner
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const handleRealNew = async () => {
@@ -34,11 +36,13 @@ export default function Home() {
       // copy automatically
       await navigator.clipboard.writeText(s.address);
 
+      // banner
       setShowCopiedBanner(true);
-      setTimeout(() => setShowCopiedBanner(false), 2500);
+      setTimeout(() => setShowCopiedBanner(false), 3000);
 
+      // set COPY button state
       setCopied(true);
-      setTimeout(() => setCopied(false), 1600);
+      setTimeout(() => setCopied(false), 2000);
 
       toast({
         title: "✅ Email copied to clipboard",
@@ -63,7 +67,7 @@ export default function Home() {
     await navigator.clipboard.writeText(currentEmail);
 
     setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
+    setTimeout(() => setCopied(false), 2000);
 
     toast({
       title: "✅ Email copied to clipboard",
@@ -80,66 +84,70 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+      {/* Premium banner */}
       {showCopiedBanner && (
-        <div className="mb-4 q-panel q-bar-cyan px-4 py-3 text-center">
-          <p className="q-title text-[11px] md:text-xs" style={{ color: "var(--cyan2)" }}>
+        <div className="mb-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur px-4 py-3 text-center">
+          <p className="q-title text-xs" style={{ color: "var(--cyan2)" }}>
             NEW EMAIL GENERATED & COPIED
           </p>
         </div>
       )}
 
-      <header className="flex items-center gap-3 mb-6 md:mb-8">
-        <ShieldAlert className="w-8 h-8" style={{ color: "var(--cyan2)" }} />
-        <h1 className="q-title text-xl md:text-2xl font-bold" style={{ color: "var(--cyan2)" }}>
+      {/* Header (más discreto como la foto) */}
+      <header className="flex items-center gap-3 mb-6 md:mb-8 mt-1">
+        <ShieldAlert className="w-7 h-7" style={{ color: "var(--cyan2)" }} />
+        <h1 className="q-title text-lg md:text-xl font-bold" style={{ color: "var(--cyan2)" }}>
           QUANTUM_MAIL
         </h1>
       </header>
 
-      {/* Top row */}
+      {/* Top Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
-        {/* Email */}
-        <div className="lg:col-span-2 q-panel q-bar-cyan p-6">
-          <div className="q-title text-[11px] md:text-xs" style={{ color: "var(--muted)" }}>
-            CURRENT IDENTITY
-          </div>
+        {/* Current Identity */}
+        <div className="lg:col-span-2 glass-panel p-6 relative overflow-hidden">
+          <div
+            className="absolute top-0 left-0 w-1 h-full"
+            style={{ background: "var(--cyan2)" }}
+          />
+          <div className="q-kicker mb-2">CURRENT IDENTITY</div>
 
-          <div className="mt-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="q-email flex-1 w-full p-4 font-mono text-lg md:text-2xl break-all select-all">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="q-email q-input flex-1 w-full font-mono text-white break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
 
             <Button
-              size="lg"
-              className="q-btn q-btn-cyan w-full sm:w-auto gap-2 font-semibold q-title"
               onClick={handleCopy}
+              data-testid="button-copy"
+              className="q-btn-tight w-full sm:w-auto gap-2 bg-black/40 border border-white/10 hover:bg-black/50"
+              style={{ color: "var(--cyan2)" }}
             >
-              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? "COPIED" : "COPY"}
             </Button>
           </div>
         </div>
 
         {/* Timer */}
-        <div className="q-panel q-bar-purple p-6 flex flex-col justify-center items-center">
-          <div className="q-title text-[11px] md:text-xs" style={{ color: "var(--muted)" }}>
-            TIME REMAINING
-          </div>
-
+        <div className="glass-panel p-6 flex flex-col justify-center items-center relative overflow-hidden">
           <div
-            className={`mt-3 text-5xl font-black q-title ${
-              timeLeft < 60 ? "animate-pulse" : ""
-            }`}
-            style={{ color: "var(--purple)" }}
-          >
+            className="absolute top-0 left-0 w-1 h-full"
+            style={{ background: "var(--purple)" }}
+          />
+
+          <div className="q-kicker">TIME REMAINING</div>
+
+          <div className={`q-timer mt-3 ${timeLeft < 60 ? "animate-pulse" : ""}`}>
             {formatTime(timeLeft)}
           </div>
 
           <div className="mt-5 flex gap-3 w-full">
             <Button
               variant="outline"
-              size="sm"
-              className="q-btn q-btn-purple flex-1 gap-2 q-title"
               onClick={togglePause}
+              data-testid="button-pause"
+              className="q-btn-tight flex-1 gap-2 bg-black/35 border border-white/10 hover:bg-black/50"
+              style={{ color: "var(--purple)" }}
             >
               {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
               {isPaused ? "RESUME" : "PAUSE"}
@@ -147,9 +155,10 @@ export default function Home() {
 
             <Button
               variant="outline"
-              size="sm"
-              className="q-btn q-btn-cyan flex-1 gap-2 q-title"
               onClick={handleRealNew}
+              data-testid="button-reset"
+              className="q-btn-tight flex-1 gap-2 bg-black/35 border border-white/10 hover:bg-black/50"
+              style={{ color: "var(--cyan2)" }}
             >
               <RefreshCw className="w-4 h-4" />
               NEW
@@ -158,21 +167,21 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Inbox */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[500px]">
-        <div className="q-panel q-bar-cyan flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-white/10 bg-black/30 flex items-center gap-2">
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[520px]">
+        {/* Inbox Section */}
+        <div className="glass-panel flex flex-col overflow-hidden relative">
+          <div className="p-5 border-b border-white/10 bg-black/30 flex items-center gap-2">
             <InboxIcon className="w-5 h-5" style={{ color: "var(--cyan2)" }} />
             <h2 className="q-title text-base md:text-lg">
               SECURE_INBOX{" "}
-              <span style={{ color: "var(--cyan2)" }} className="text-sm">
+              <span className="text-sm" style={{ color: "var(--cyan2)" }}>
                 ({inbox.length})
               </span>
             </h2>
-
             {isPaused && (
-              <span className="ml-auto text-[11px] q-title animate-pulse" style={{ color: "var(--purple)" }}>
-                RECEIVING PAUSED
+              <span className="ml-auto text-xs uppercase animate-pulse q-title" style={{ color: "var(--purple)" }}>
+                Receiving Paused
               </span>
             )}
           </div>
@@ -190,79 +199,65 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="mb-6 gap-2 q-title"
-                    style={{ color: "var(--muted)" }}
+                    className="mb-6 gap-2 text-muted-foreground hover:text-white"
                     onClick={() => setSelectedEmail(null)}
                   >
                     <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
                   </Button>
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
-                      <div className="q-title text-[11px]" style={{ color: "var(--muted)" }}>
-                        FROM
-                      </div>
-                      <div className="text-lg font-mono" style={{ color: "var(--cyan2)" }}>
+                      <div className="q-kicker">FROM</div>
+                      <div className="mt-1 text-lg font-mono underline underline-offset-4" style={{ color: "var(--cyan2)" }}>
                         {selectedEmail.sender}
                       </div>
                     </div>
 
                     <div>
-                      <div className="q-title text-[11px]" style={{ color: "var(--muted)" }}>
-                        SUBJECT
+                      <div className="q-kicker">SUBJECT</div>
+                      <div className="mt-1 text-2xl font-bold text-white">
+                        {selectedEmail.subject}
                       </div>
-                      <div className="text-xl font-bold">{selectedEmail.subject}</div>
                     </div>
 
-                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-white/80">
+                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-7 text-gray-300">
                       {selectedEmail.body}
                     </div>
                   </div>
                 </motion.div>
               ) : (
-                <motion.div key="list" className="p-2 h-full">
+                <motion.div key="list" className="p-3 h-full">
                   {inbox.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-white/45">
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                       <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
                       <p className="q-title text-xs">AWAITING TRANSMISSIONS...</p>
                     </div>
                   ) : (
-                    <div className="space-y-2 p-2">
-                      {inbox.map((msg) => (
+                    <div className="space-y-3">
+                      {inbox.map((msg, idx) => (
                         <motion.div
                           key={msg.id}
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="p-4 rounded-xl cursor-pointer transition-all"
-                          style={{
-                            background: "rgba(0,0,0,0.35)",
-                            border: "1px solid rgba(255,255,255,0.06)",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLDivElement).style.border =
-                              "1px solid rgba(46,246,255,0.35)";
-                            (e.currentTarget as HTMLDivElement).style.background =
-                              "rgba(46,246,255,0.04)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLDivElement).style.border =
-                              "1px solid rgba(255,255,255,0.06)";
-                            (e.currentTarget as HTMLDivElement).style.background =
-                              "rgba(0,0,0,0.35)";
-                          }}
+                          transition={{ delay: Math.min(idx * 0.04, 0.25) }}
+                          className="p-4 bg-black/35 border border-white/10 rounded-xl cursor-pointer hover:bg-black/45 hover:border-white/15 transition-all"
                           onClick={() => setSelectedEmail(msg)}
+                          data-testid={`row-email-${msg.id}`}
                         >
                           <div className="flex justify-between items-start mb-2">
                             <div className="font-mono text-sm truncate max-w-[70%]" style={{ color: "var(--cyan2)" }}>
                               {msg.sender}
                             </div>
-                            <div className="text-xs font-mono" style={{ color: "var(--muted)" }}>
+                            <div className="text-xs font-mono text-muted-foreground">
                               {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
                             </div>
                           </div>
 
-                          <div className="font-bold mb-1 truncate">{msg.subject}</div>
-                          <div className="text-sm truncate" style={{ color: "var(--muted)" }}>
+                          <div className="font-bold mb-1 truncate text-white">
+                            {msg.subject}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground truncate">
                             {msg.preview}
                           </div>
                         </motion.div>
