@@ -9,6 +9,7 @@ import {
   Play,
   RefreshCw,
   Inbox as InboxIcon,
+  ArchiveRestore,
   Check,
   ChevronLeft,
   ShieldAlert,
@@ -18,26 +19,35 @@ import { useToast } from "@/hooks/use-toast";
 import { createSession } from "@/lib/api";
 
 export default function Home() {
-  const { currentEmail, inbox, timeLeft, isPaused, togglePause, setRealSession } =
-    useMailSession();
+  const {
+    currentEmail,
+    inbox,
+    timeLeft,
+    isPaused,
+    togglePause,
+    setRealSession,
+    // history, // si ya lo eliminaste del hook, NO lo uses aquí
+  } = useMailSession();
 
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
+
+  // ✅ Banner premium
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      // ✅ copy automatically (ONLY ONCE)
+      // ✅ AUTO COPY (una vez)
       await navigator.clipboard.writeText(s.address);
 
-      // ✅ premium banner (3s)
+      // ✅ Banner 3s
       setShowCopiedBanner(true);
       setTimeout(() => setShowCopiedBanner(false), 3000);
 
-      // ✅ set COPY button to "COPIED" (2s)
+      // ✅ COPY state 2s
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
 
@@ -47,6 +57,7 @@ export default function Home() {
         className: "bg-primary text-primary-foreground font-display",
       });
 
+      // ✅ Cambia sesión
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
     } catch (err: any) {
@@ -59,18 +70,18 @@ export default function Home() {
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!currentEmail) return;
-    navigator.clipboard.writeText(currentEmail);
+    await navigator.clipboard.writeText(currentEmail);
 
     setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+
     toast({
       title: "✅ Email copied to clipboard",
       description: "Paste anywhere (Ctrl+V / Cmd+V)",
       className: "bg-primary text-primary-foreground font-display",
     });
-
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const formatTime = (seconds: number) => {
@@ -80,163 +91,186 @@ export default function Home() {
   };
 
   return (
-    <div className="qm-shell">
-      {/* Banner (premium) */}
+    <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+      {/* ✅ Banner premium */}
       {showCopiedBanner && (
-        <div className="qm-banner">
-          <div className="qm-banner-inner">
-            <p className="qm-title qm-cyan">NEW EMAIL GENERATED &amp; COPIED</p>
-          </div>
+        <div className="mb-6 rounded-xl border border-primary/30 bg-black/40 backdrop-blur px-4 py-3 text-center">
+          <p className="font-display tracking-widest text-primary text-sm">
+            NEW EMAIL GENERATED &amp; COPIED
+          </p>
         </div>
       )}
 
       {/* Header */}
-      <header className="qm-header">
-        <div className="qm-header-left">
-          <ShieldAlert className="qm-logo" />
-          <h1 className="qm-brand">QUANTUM_MAIL</h1>
-        </div>
+      <header className="flex items-center gap-3 mb-8">
+        <ShieldAlert className="w-8 h-8 text-primary" />
+        <h1 className="text-2xl font-bold tracking-wider text-primary font-display">
+          QUANTUM_MAIL
+        </h1>
       </header>
 
-      {/* TOP GRID: Identity (2 cols) + Timer (1 col) */}
-      <section className="qm-top">
-        {/* Identity */}
-        <div className="qm-panel qm-panel-cyan">
-          <div className="qm-panel-pad">
-            <div className="qm-kicker">CURRENT IDENTITY</div>
+      {/* Top Panel - Identity & Timer (como tu screenshot) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Identity (2 columnas) */}
+        <div className="lg:col-span-2 glass-panel p-6 rounded-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
+            CURRENT IDENTITY
+          </h2>
 
-            <div className="qm-identity-row">
-              <div className="qm-identity-box">
-                <span className="qm-identity-text">
-                  {currentEmail || "GENERATING..."}
-                </span>
-              </div>
-
-              <Button
-                onClick={handleCopy}
-                data-testid="button-copy"
-                variant="outline"
-                className="qm-btn qm-btn-cyan"
-              >
-                {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
-                <span className="qm-btn-text">{copied ? "COPIED" : "COPY"}</span>
-              </Button>
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex-1 w-full bg-black/50 border border-primary/20 rounded-lg p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
+              {currentEmail || "GENERATING..."}
             </div>
+
+            <Button
+              size="lg"
+              className="w-full sm:w-auto gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
+              onClick={handleCopy}
+              data-testid="button-copy"
+            >
+              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              {copied ? "COPIED" : "COPY"}
+            </Button>
           </div>
         </div>
 
-        {/* Timer */}
-        <div className="qm-panel qm-panel-purple">
-          <div className="qm-panel-pad qm-center">
-            <div className="qm-kicker qm-center-text">TIME REMAINING</div>
+        {/* Timer (1 columna) */}
+        <div className="glass-panel p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-accent" />
+          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
+            TIME REMAINING
+          </h2>
 
-            <div className="qm-timer">{formatTime(timeLeft)}</div>
+          {/* ✅ Timer un poquito más chico (como pediste) */}
+          <div className="text-4xl md:text-5xl font-bold font-display tracking-wider mb-4 text-accent">
+            {formatTime(timeLeft)}
+          </div>
 
-            <div className="qm-timer-actions">
-              <Button
-                variant="outline"
-                onClick={togglePause}
-                data-testid="button-pause"
-                className="qm-btn qm-btn-purple"
-              >
-                {isPaused ? <Play className="qm-ico" /> : <Pause className="qm-ico" />}
-                <span className="qm-btn-text">{isPaused ? "RESUME" : "PAUSE"}</span>
-              </Button>
+          <div className="flex gap-2 w-full font-display">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 bg-black/40 border-accent/30 text-accent hover:bg-accent/20 hover:text-accent transition-all"
+              onClick={togglePause}
+              data-testid="button-pause"
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              {isPaused ? "RESUME" : "PAUSE"}
+            </Button>
 
-              <Button
-                variant="outline"
-                onClick={handleRealNew}
-                data-testid="button-reset"
-                className="qm-btn qm-btn-cyan"
-              >
-                <RefreshCw className="qm-ico" />
-                <span className="qm-btn-text">NEW</span>
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 bg-black/40 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary transition-all"
+              onClick={handleRealNew}
+              data-testid="button-reset"
+            >
+              <RefreshCw className="w-4 h-4" />
+              NEW
+            </Button>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* BOTTOM: Inbox FULL WIDTH (sin Archives, sin espacio) */}
-      <section className="qm-bottom">
-        <div className="qm-panel qm-panel-plain">
-          <div className="qm-section-head">
-            <div className="qm-section-left">
-              <InboxIcon className="qm-sec-ico" />
-              <h2 className="qm-section-title">
-                SECURE_INBOX{" "}
-                <span className="qm-count">({inbox.length})</span>
-              </h2>
-            </div>
+      {/* Main Content: Inbox (2 cols) + Archives (1 col) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-[520px]">
+        {/* Inbox */}
+        <div className="lg:col-span-2 glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20">
+          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+            <InboxIcon className="w-5 h-5 text-primary" />
+            <h2 className="font-display tracking-widest text-lg">
+              SECURE_INBOX <span className="text-primary text-sm">({inbox.length})</span>
+            </h2>
 
             {isPaused && (
-              <span className="qm-paused">RECEIVING PAUSED</span>
+              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+                Receiving Paused
+              </span>
             )}
           </div>
 
-          <ScrollArea className="qm-scroll">
+          <ScrollArea className="flex-1 p-0">
             <AnimatePresence mode="wait">
               {selectedEmail ? (
                 <motion.div
                   key="detail"
-                  initial={{ opacity: 0, x: 22 }}
+                  initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -22 }}
-                  className="qm-detail"
+                  exit={{ opacity: 0, x: -20 }}
+                  className="p-6"
                 >
-                  <button
-                    className="qm-back"
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
                     onClick={() => setSelectedEmail(null)}
-                    type="button"
                   >
-                    <ChevronLeft className="qm-back-ico" />
-                    BACK TO INBOX
-                  </button>
+                    <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
+                  </Button>
 
-                  <div className="qm-detail-grid">
+                  <div className="space-y-4">
                     <div>
-                      <div className="qm-label">FROM</div>
-                      <div className="qm-from">{selectedEmail.sender}</div>
+                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                        From
+                      </div>
+                      <div className="text-lg font-mono text-primary">
+                        {selectedEmail.sender}
+                      </div>
                     </div>
 
                     <div>
-                      <div className="qm-label">SUBJECT</div>
-                      <div className="qm-subject">{selectedEmail.subject}</div>
+                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                        Subject
+                      </div>
+                      <div className="text-xl font-bold text-white">
+                        {selectedEmail.subject}
+                      </div>
                     </div>
 
-                    <div className="qm-body">{selectedEmail.body}</div>
+                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+                      {selectedEmail.body}
+                    </div>
                   </div>
                 </motion.div>
               ) : (
-                <motion.div key="list" className="qm-list">
+                <motion.div key="list" className="p-2 h-full">
                   {inbox.length === 0 ? (
-                    <div className="qm-empty">
-                      <RefreshCw className="qm-spin" />
-                      <div className="qm-empty-text">AWAITING TRANSMISSIONS...</div>
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
+                      <p className="font-mono text-sm uppercase tracking-widest">
+                        Awaiting transmissions...
+                      </p>
                     </div>
                   ) : (
-                    <div className="qm-items">
+                    <div className="space-y-2">
                       {inbox.map((msg, idx) => (
                         <motion.div
                           key={msg.id}
-                          initial={{ opacity: 0, y: -8 }}
+                          initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: Math.min(idx * 0.03, 0.25) }}
-                          className="qm-item"
+                          className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
                           onClick={() => setSelectedEmail(msg)}
                           data-testid={`row-email-${msg.id}`}
                         >
-                          <div className="qm-item-top">
-                            <div className="qm-sender">{msg.sender}</div>
-                            <div className="qm-date">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="font-mono text-sm text-primary truncate max-w-[70%]">
+                              {msg.sender}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-mono">
                               {msg.timestamp
                                 ? new Date(msg.timestamp as any).toLocaleString()
                                 : ""}
                             </div>
                           </div>
 
-                          <div className="qm-item-subject">{msg.subject}</div>
-                          <div className="qm-item-preview">{msg.preview}</div>
+                          <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
+                            {msg.subject}
+                          </div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {msg.preview}
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -246,7 +280,19 @@ export default function Home() {
             </AnimatePresence>
           </ScrollArea>
         </div>
-      </section>
+
+        {/* Archives (UI igual al original; si tú ya no guardas historial, se queda vacío y NO rompe layout) */}
+        <div className="glass-panel rounded-xl flex flex-col overflow-hidden border-accent/20">
+          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+            <ArchiveRestore className="w-5 h-5 text-accent" />
+            <h2 className="font-display tracking-widest text-lg">ARCHIVES</h2>
+          </div>
+
+          <div className="flex-1 p-4 text-muted-foreground font-mono text-xs uppercase tracking-widest flex items-center justify-center">
+            No archives (disabled)
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
