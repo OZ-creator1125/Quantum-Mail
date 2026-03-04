@@ -8,7 +8,7 @@ export const useMailSession = () => {
   const [inbox, setInbox] = useState<EmailMessage[]>([]);
   const [timeLeft, setTimeLeft] = useState<number>(600);
   const [isPaused, setIsPaused] = useState<boolean>(false);
-
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const pollRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -130,39 +130,36 @@ export const useMailSession = () => {
 
     if (!token || isPaused) return;
 
-    const tick = async () => {
-      try {
-        const res = await fetch(
-          "https://tempmail-backend-production.up.railway.app/api/inbox",
-          { headers: { Authorization: `Bearer ${token}` } },
-        );
+const tick = async () => {
+  setIsLoading(true);
+  try {
+    const res = await fetch(
+      "https://tempmail-backend-production.up.railway.app/api/inbox",
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-        const data = await res.json();
+    const data = await res.json();
 
-        const list =
-          data?.["hydra:member"] ??
-          data?.messages ??
-          data?.data ??
-          [];
+    const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
 
-        if (Array.isArray(list)) {
-          const mapped = list.map((m: any) => ({
-            id: m.id ?? m["@id"] ?? crypto.randomUUID(),
-            sender: m?.from?.address ?? "unknown",
-            subject: m?.subject ?? "(sin asunto)",
-            preview: m?.intro ?? "",
-            body: m?.intro ?? "",
-            // importante: lo guardo como string para evitar crashes
-            timestamp: m?.createdAt ?? new Date().toISOString(),
-          }));
+    if (Array.isArray(list)) {
+      const mapped = list.map((m: any) => ({
+        id: m.id ?? m["@id"] ?? crypto.randomUUID(),
+        sender: m?.from?.address ?? "unknown",
+        subject: m?.subject ?? "(no subject)",
+        preview: m?.intro ?? "",
+        body: m?.intro ?? "",
+        timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+      }));
 
-          setInbox(mapped);
-        }
-      } catch (err) {
-        console.error("Error obteniendo inbox:", err);
-      }
-    };
-
+      setInbox(mapped);
+    }
+  } catch (err) {
+    console.error("Error obteniendo inbox:", err);
+  } finally {
+    setIsLoading(false);
+  }
+};
     // 1) corre inmediato
     tick();
     // 2) luego cada 4s
@@ -201,14 +198,14 @@ export const useMailSession = () => {
   );
 
   return {
-    currentEmail,
-    token,
-    inbox,
-    timeLeft,
-    isPaused,
-    togglePause,
-    handleReset,
-    addExtraTime,
-    setRealSession,
-  };
+  currentEmail,
+  token,
+  inbox,
+  timeLeft,
+  isPaused,
+  isLoading, // ✅
+  togglePause,
+  handleReset,
+  addExtraTime,
+  setRealSession,
 };
