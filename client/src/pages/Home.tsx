@@ -25,25 +25,32 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
 
+  // Banner premium (cuando NEW genera y copia)
+  const [showCopiedBanner, setShowCopiedBanner] = useState(false);
+
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      // ✅ copy automatically (ONLY ONCE)
+      // ✅ Copia automático (una sola vez)
       await navigator.clipboard.writeText(s.address);
 
-      // ✅ set COPY button to "COPIED" (2s)
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      // ✅ Banner 3s
+      setShowCopiedBanner(true);
+      window.setTimeout(() => setShowCopiedBanner(false), 3000);
 
-      // ✅ toast in English
+      // ✅ Estado COPIED 2s
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+
+      // ✅ Toast en inglés
       toast({
         title: "✅ Email copied to clipboard",
         description: "Paste anywhere (Ctrl+V / Cmd+V)",
         className: "bg-primary text-primary-foreground font-display",
       });
 
-      // ✅ switch session + clear selected email
+      // ✅ Cambia sesión + limpia selección
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
     } catch (err: any) {
@@ -58,16 +65,25 @@ export default function Home() {
 
   const handleCopy = async () => {
     if (!currentEmail) return;
-    await navigator.clipboard.writeText(currentEmail);
 
-    setCopied(true);
-    toast({
-      title: "✅ Email copied to clipboard",
-      description: "Paste anywhere (Ctrl+V / Cmd+V)",
-      className: "bg-primary text-primary-foreground font-display",
-    });
+    try {
+      await navigator.clipboard.writeText(currentEmail);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
 
-    setTimeout(() => setCopied(false), 2000);
+      toast({
+        title: "✅ Email copied to clipboard",
+        description: "Paste anywhere (Ctrl+V / Cmd+V)",
+        className: "bg-primary text-primary-foreground font-display",
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: "❌ Clipboard blocked",
+        description: "Your browser blocked clipboard access.",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -77,33 +93,41 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+    <div className="min-h-screen p-4 md:p-10 flex flex-col max-w-7xl mx-auto">
+      {/* Premium banner */}
+      {showCopiedBanner && (
+        <div className="mb-5 rounded-xl border border-primary/30 bg-black/40 backdrop-blur px-4 py-3 text-center">
+          <p className="font-display tracking-widest text-primary text-sm">
+            NEW EMAIL GENERATED & COPIED
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex items-center gap-3 mb-8">
-        <ShieldAlert className="w-8 h-8 text-primary" />
-        <h1 className="text-2xl font-bold tracking-wider text-primary">
+        <ShieldAlert className="w-7 h-7 text-primary" />
+        <h1 className="text-2xl md:text-3xl font-bold tracking-wider text-primary font-display">
           QUANTUM_MAIL
         </h1>
       </header>
 
-      {/* TOP: Identity (2 cols) + Timer (1 col) */}
+      {/* Top row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Identity */}
-        <div className="lg:col-span-2 glass-panel p-6 rounded-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-
-          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-3 font-display">
+        {/* Current Identity (span 2) */}
+        <div className="lg:col-span-2 glass-panel p-6 rounded-2xl relative overflow-hidden">
+          <div className="qm-accent-left bg-primary" />
+          <h2 className="text-xs md:text-sm text-muted-foreground uppercase tracking-widest mb-3 font-display">
             Current Identity
           </h2>
 
           <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
-            <div className="flex-1 w-full bg-black/50 border border-primary/20 rounded-lg px-4 py-4 font-mono text-xl md:text-2xl text-white break-all select-all">
+            <div className="flex-1 qm-email-box rounded-xl p-4 font-mono text-lg md:text-2xl text-white break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
 
             <Button
               size="lg"
-              className="w-full md:w-[160px] gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
+              className="qm-btn md:w-[160px] gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest"
               onClick={handleCopy}
               data-testid="button-copy"
             >
@@ -114,32 +138,27 @@ export default function Home() {
         </div>
 
         {/* Timer */}
-        <div className="glass-panel p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
-          <div
-            className={`absolute top-0 left-0 w-1 h-full transition-colors ${
-              timeLeft < 60 ? "bg-destructive" : "bg-accent"
-            }`}
-          />
+        <div className="glass-panel p-6 rounded-2xl relative overflow-hidden flex flex-col justify-center">
+          {/* barra derecha (como tu imagen) */}
+          <div className="absolute top-0 right-0 w-1 h-full bg-accent opacity-90" />
 
-          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-3 font-display">
+          <h2 className="text-xs md:text-sm text-muted-foreground uppercase tracking-widest mb-3 font-display text-center">
             Time Remaining
           </h2>
 
-          {/* timer a little smaller (como pediste) */}
+          {/* Timer un poco más chico como pediste */}
           <div
-            className={`text-4xl md:text-5xl font-bold font-display tracking-wider mb-5 transition-colors ${
+            className={`text-4xl md:text-5xl font-bold font-display tracking-wider mb-5 text-center ${
               timeLeft < 60 ? "text-destructive animate-pulse" : "text-accent"
             }`}
           >
             {formatTime(timeLeft)}
           </div>
 
-          {/* Buttons EXACT: two equal, centered, same style as original */}
-          <div className="grid grid-cols-2 gap-3 w-full font-display">
+          <div className="grid grid-cols-2 gap-3 font-display">
             <Button
               variant="outline"
-              size="sm"
-              className="w-full gap-2 bg-black/40 border-accent/30 text-accent hover:bg-accent/20 hover:text-accent transition-all"
+              className="qm-btn gap-2 bg-black/35 border-accent/30 text-accent hover:bg-accent/15 hover:text-accent rounded-xl"
               onClick={togglePause}
               data-testid="button-pause"
             >
@@ -149,8 +168,7 @@ export default function Home() {
 
             <Button
               variant="outline"
-              size="sm"
-              className="w-full gap-2 bg-black/40 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary transition-all"
+              className="qm-btn gap-2 bg-black/35 border-primary/30 text-primary hover:bg-primary/15 hover:text-primary rounded-xl"
               onClick={handleRealNew}
               data-testid="button-reset"
             >
@@ -161,14 +179,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* BOTTOM: Inbox FULL WIDTH (sin Archives) */}
-      <div className="glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20 flex-1 min-h-[520px]">
-        <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+      {/* Inbox */}
+      <div className="glass-panel rounded-2xl flex flex-col overflow-hidden relative border-primary/20 flex-1 min-h-[520px]">
+        <div className="p-4 md:p-5 border-b border-white/10 bg-black/35 flex items-center gap-2">
           <InboxIcon className="w-5 h-5 text-primary" />
-          <h2 className="font-display tracking-widest text-lg">
+          <h2 className="font-display tracking-widest text-lg md:text-xl">
             SECURE_INBOX{" "}
             <span className="text-primary text-sm">({inbox.length})</span>
           </h2>
+
           {isPaused && (
             <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
               Receiving Paused
@@ -181,10 +200,10 @@ export default function Home() {
             {selectedEmail ? (
               <motion.div
                 key="detail"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 16 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="p-6"
+                exit={{ opacity: 0, x: -16 }}
+                className="p-5 md:p-7"
               >
                 <Button
                   variant="ghost"
@@ -195,12 +214,12 @@ export default function Home() {
                   <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
                 </Button>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
                     <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
                       From
                     </div>
-                    <div className="text-lg font-mono text-primary">
+                    <div className="text-lg font-mono text-primary break-all">
                       {selectedEmail.sender}
                     </div>
                   </div>
@@ -209,7 +228,7 @@ export default function Home() {
                     <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
                       Subject
                     </div>
-                    <div className="text-xl font-bold text-white">
+                    <div className="text-xl font-bold text-white break-words">
                       {selectedEmail.subject}
                     </div>
                   </div>
@@ -220,10 +239,16 @@ export default function Home() {
                 </div>
               </motion.div>
             ) : (
-              <motion.div key="list" className="p-2 h-full">
+              <motion.div
+                key="list"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="p-3 md:p-4 h-full"
+              >
                 {inbox.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                    <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
+                  <div className="flex flex-col items-center justify-center h-[420px] text-muted-foreground">
+                    <RefreshCw className="w-9 h-9 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
                     <p className="font-mono text-sm uppercase tracking-widest">
                       Awaiting transmissions...
                     </p>
@@ -233,18 +258,18 @@ export default function Home() {
                     {inbox.map((msg, idx) => (
                       <motion.div
                         key={msg.id}
-                        initial={{ opacity: 0, y: -10 }}
+                        initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.04 }}
-                        className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                        className="p-4 bg-black/35 border border-white/5 rounded-xl cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all group"
                         onClick={() => setSelectedEmail(msg)}
                         data-testid={`row-email-${msg.id}`}
                       >
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex justify-between items-start gap-3 mb-2">
                           <div className="font-mono text-sm text-primary truncate max-w-[70%]">
                             {msg.sender}
                           </div>
-                          <div className="text-xs text-muted-foreground font-mono">
+                          <div className="text-xs text-muted-foreground font-mono whitespace-nowrap">
                             {msg.timestamp
                               ? new Date(msg.timestamp as any).toLocaleString()
                               : ""}
