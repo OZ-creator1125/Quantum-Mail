@@ -1,159 +1,87 @@
-/* =========================================================
-   QUANTUM MAIL — PREMIUM UI THEME (GLOBAL)
-   Drop-in CSS: no rompe React, solo mejora UI
-========================================================= */
+/* ===== QUANTUM MAIL FUTURISTIC UI ===== */
 
-:root {
-  --bg0: #020617;
-  --bg1: #050b1f;
-  --panel: rgba(15, 23, 42, 0.55);
-  --panel-strong: rgba(15, 23, 42, 0.75);
-  --border: rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-
-  --text: rgba(255, 255, 255, 0.92);
-  --muted: rgba(255, 255, 255, 0.62);
-
-  --primary: #39ffe1;     /* neon mint */
-  --accent: #9b5cff;      /* neon purple */
-  --danger: #ff4d6d;
-
-  --shadow: 0 18px 60px rgba(0, 0, 0, 0.55);
-  --glow-primary: 0 0 28px rgba(57, 255, 225, 0.16);
-  --glow-accent: 0 0 28px rgba(155, 92, 255, 0.16);
-
-  --radius-xl: 18px;
-
-  --font-display: "Orbitron", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  --font-ui: "Rajdhani", ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-}
-
-* { box-sizing: border-box; }
-
-html, body {
-  height: 100%;
-}
-
-body.qm-dark {
+body {
   margin: 0;
-  color: var(--text);
-  font-family: var(--font-ui);
-
-  /* Premium background */
+  font-family: 'Rajdhani', sans-serif;
   background:
-    radial-gradient(1200px 600px at 15% 10%, rgba(57,255,225,0.13), transparent 55%),
-    radial-gradient(1000px 500px at 85% 12%, rgba(155,92,255,0.12), transparent 55%),
-    radial-gradient(800px 500px at 50% 90%, rgba(57,255,225,0.08), transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+    radial-gradient(circle at 20% 20%, rgba(0,255,200,0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(0,120,255,0.08), transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(0,255,150,0.05), transparent 40%),
+    linear-gradient(180deg,#020617,#020617 40%,#000000);
+  color: white;
 }
 
-/* Improve text rendering */
-body, button, input, textarea {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
 
-/* Optional: selection */
-::selection {
-  background: rgba(57, 255, 225, 0.22);
-}
+/* GLASS PANELS */
 
-/* =========================================================
-   "Glass panel" utility used in your Home.tsx
-========================================================= */
 .glass-panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow);
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  position: relative;
-}
-
-/* Subtle top shine */
-.glass-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-xl);
-  background: linear-gradient(
-    180deg,
-    rgba(255,255,255,0.08),
-    rgba(255,255,255,0.02),
-    transparent 55%
-  );
-  pointer-events: none;
-  opacity: 0.65;
-}
-
-/* Neon edge hint */
-.glass-panel::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-xl);
-  pointer-events: none;
+  background: rgba(15,23,42,0.65);
+  border: 1px solid rgba(255,255,255,0.06);
   box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,0.05),
-    0 0 0 1px rgba(0,0,0,0.2);
+    0 0 20px rgba(0,255,200,0.08),
+    inset 0 0 10px rgba(255,255,255,0.03);
 }
 
-/* Optional utility you referenced */
-.glow-border {
-  box-shadow: var(--glow-primary);
+
+/* NEON BORDER */
+
+.neon-border {
+  border: 1px solid rgba(0,255,200,0.25);
+  box-shadow:
+    0 0 10px rgba(0,255,200,0.3),
+    0 0 20px rgba(0,255,200,0.15);
 }
 
-/* =========================================================
-   Headings vibe (Orbitron)
-========================================================= */
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
-  letter-spacing: 0.06em;
+
+/* EMAIL BOX */
+
+.email-box {
+  background: rgba(0,0,0,0.6);
+  border: 1px solid rgba(0,255,200,0.25);
+  box-shadow: 0 0 12px rgba(0,255,200,0.25);
 }
 
-/* =========================================================
-   Buttons + focus ring (works with your existing components)
-========================================================= */
-button, [role="button"] {
-  font-family: var(--font-ui);
+
+/* BUTTON GLOW */
+
+button {
+  transition: all 0.25s ease;
 }
 
-:focus-visible {
-  outline: 2px solid rgba(57, 255, 225, 0.45);
-  outline-offset: 2px;
-  border-radius: 10px;
+button:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 0 10px rgba(0,255,200,0.4),
+    0 0 20px rgba(0,255,200,0.15);
 }
 
-/* =========================================================
-   Scrollbars (nice premium feel)
-========================================================= */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+
+/* INBOX ITEM */
+
+.inbox-item {
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(0,0,0,0.45);
+}
+
+.inbox-item:hover {
+  border: 1px solid rgba(0,255,200,0.3);
+  background: rgba(0,255,200,0.05);
+  box-shadow: 0 0 12px rgba(0,255,200,0.15);
+}
+
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(57,255,225,0.28), rgba(155,92,255,0.25));
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(57,255,225,0.40), rgba(155,92,255,0.38));
+  background: rgba(0,255,200,0.3);
+  border-radius: 4px;
 }
 
-/* =========================================================
-   Small premium animation helpers
-========================================================= */
-@keyframes qmGlowPulse {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(57,255,225,0.08)); }
-  50%      { filter: drop-shadow(0 0 18px rgba(155,92,255,0.12)); }
-}
-
-.qm-logo-glow {
-  animation: qmGlowPulse 3.5s ease-in-out infinite;
-}
-
-/* =========================================================
-   Optional: make "code-like" blocks look crisp
-========================================================= */
-.font-mono, code, pre {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.4);
 }
