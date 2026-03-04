@@ -24,31 +24,28 @@ export default function Home() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
+
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      // ✅ copy automatically (ONLY ONCE)
+      // copy automatically
       await navigator.clipboard.writeText(s.address);
 
-      // ✅ premium banner (3s)
       setShowCopiedBanner(true);
-      setTimeout(() => setShowCopiedBanner(false), 3000);
+      setTimeout(() => setShowCopiedBanner(false), 2500);
 
-      // ✅ set COPY button to "COPIED" (2s)
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 1600);
 
-      // ✅ toast in English
       toast({
         title: "✅ Email copied to clipboard",
         description: "Paste anywhere (Ctrl+V / Cmd+V)",
         className: "bg-primary text-primary-foreground font-display",
       });
 
-      // ✅ switch session + clear selected email
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
     } catch (err: any) {
@@ -61,18 +58,18 @@ export default function Home() {
     }
   };
 
-  const handleCopy = () => {
+  const handleCopy = async () => {
     if (!currentEmail) return;
-    navigator.clipboard.writeText(currentEmail);
+    await navigator.clipboard.writeText(currentEmail);
 
     setCopied(true);
+    setTimeout(() => setCopied(false), 1600);
+
     toast({
       title: "✅ Email copied to clipboard",
       description: "Paste anywhere (Ctrl+V / Cmd+V)",
       className: "bg-primary text-primary-foreground font-display",
     });
-
-    setTimeout(() => setCopied(false), 2000);
   };
 
   const formatTime = (seconds: number) => {
@@ -83,41 +80,38 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
-      {/* Premium banner */}
       {showCopiedBanner && (
-        <div className="qm-banner mb-4 rounded-xl px-4 py-3 text-center">
-          <p className="font-display tracking-widest text-primary text-sm neon-text">
+        <div className="mb-4 q-panel q-bar-cyan px-4 py-3 text-center">
+          <p className="q-title text-[11px] md:text-xs" style={{ color: "var(--cyan2)" }}>
             NEW EMAIL GENERATED & COPIED
           </p>
         </div>
       )}
 
-      {/* Header */}
-      <header className="flex items-center gap-3 mb-8">
-        <ShieldAlert className="w-8 h-8 text-primary neon-text" />
-        <h1 className="text-2xl font-bold tracking-wider text-primary font-display neon-text">
+      <header className="flex items-center gap-3 mb-6 md:mb-8">
+        <ShieldAlert className="w-8 h-8" style={{ color: "var(--cyan2)" }} />
+        <h1 className="q-title text-xl md:text-2xl font-bold" style={{ color: "var(--cyan2)" }}>
           QUANTUM_MAIL
         </h1>
       </header>
 
-      {/* Top Panel - Email & Timer */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="lg:col-span-2 glass-panel neon-border p-6 rounded-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
-            Current Identity
-          </h2>
+      {/* Top row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
+        {/* Email */}
+        <div className="lg:col-span-2 q-panel q-bar-cyan p-6">
+          <div className="q-title text-[11px] md:text-xs" style={{ color: "var(--muted)" }}>
+            CURRENT IDENTITY
+          </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="email-box flex-1 w-full p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
+          <div className="mt-3 flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="q-email flex-1 w-full p-4 font-mono text-lg md:text-2xl break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
 
             <Button
               size="lg"
-              className="btn-cyber w-full sm:w-auto gap-2 text-primary font-display tracking-widest"
+              className="q-btn q-btn-cyan w-full sm:w-auto gap-2 font-semibold q-title"
               onClick={handleCopy}
-              data-testid="button-copy"
             >
               {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
               {copied ? "COPIED" : "COPY"}
@@ -125,31 +119,27 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="glass-panel neon-border p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
-          <div
-            className={`absolute top-0 left-0 w-1 h-full transition-colors ${
-              timeLeft < 60 ? "bg-destructive" : "bg-accent"
-            }`}
-          />
-          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
-            Time Remaining
-          </h2>
+        {/* Timer */}
+        <div className="q-panel q-bar-purple p-6 flex flex-col justify-center items-center">
+          <div className="q-title text-[11px] md:text-xs" style={{ color: "var(--muted)" }}>
+            TIME REMAINING
+          </div>
 
           <div
-            className={`text-5xl font-bold font-display tracking-wider mb-4 transition-colors ${
-              timeLeft < 60 ? "text-destructive animate-pulse" : "text-accent"
+            className={`mt-3 text-5xl font-black q-title ${
+              timeLeft < 60 ? "animate-pulse" : ""
             }`}
+            style={{ color: "var(--purple)" }}
           >
             {formatTime(timeLeft)}
           </div>
 
-          <div className="flex gap-2 w-full font-display">
+          <div className="mt-5 flex gap-3 w-full">
             <Button
               variant="outline"
               size="sm"
-              className="btn-cyber flex-1 gap-2 text-accent"
+              className="q-btn q-btn-purple flex-1 gap-2 q-title"
               onClick={togglePause}
-              data-testid="button-pause"
             >
               {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
               {isPaused ? "RESUME" : "PAUSE"}
@@ -158,9 +148,8 @@ export default function Home() {
             <Button
               variant="outline"
               size="sm"
-              className="btn-cyber flex-1 gap-2 text-primary"
+              className="q-btn q-btn-cyan flex-1 gap-2 q-title"
               onClick={handleRealNew}
-              data-testid="button-reset"
             >
               <RefreshCw className="w-4 h-4" />
               NEW
@@ -169,20 +158,21 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Inbox */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[500px]">
-        {/* Inbox Section */}
-        <div className="glass-panel neon-border rounded-xl flex flex-col overflow-hidden relative border-primary/20">
-          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
-            <InboxIcon className="w-5 h-5 text-primary neon-text" />
-            <h2 className="font-display tracking-widest text-lg">
+        <div className="q-panel q-bar-cyan flex flex-col overflow-hidden">
+          <div className="p-4 border-b border-white/10 bg-black/30 flex items-center gap-2">
+            <InboxIcon className="w-5 h-5" style={{ color: "var(--cyan2)" }} />
+            <h2 className="q-title text-base md:text-lg">
               SECURE_INBOX{" "}
-              <span className="text-primary text-sm neon-text">({inbox.length})</span>
+              <span style={{ color: "var(--cyan2)" }} className="text-sm">
+                ({inbox.length})
+              </span>
             </h2>
 
             {isPaused && (
-              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
-                Receiving Paused
+              <span className="ml-auto text-[11px] q-title animate-pulse" style={{ color: "var(--purple)" }}>
+                RECEIVING PAUSED
               </span>
             )}
           </div>
@@ -200,7 +190,8 @@ export default function Home() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
+                    className="mb-6 gap-2 q-title"
+                    style={{ color: "var(--muted)" }}
                     onClick={() => setSelectedEmail(null)}
                   >
                     <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
@@ -208,24 +199,22 @@ export default function Home() {
 
                   <div className="space-y-4">
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        From
+                      <div className="q-title text-[11px]" style={{ color: "var(--muted)" }}>
+                        FROM
                       </div>
-                      <div className="text-lg font-mono text-primary neon-text">
+                      <div className="text-lg font-mono" style={{ color: "var(--cyan2)" }}>
                         {selectedEmail.sender}
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        Subject
+                      <div className="q-title text-[11px]" style={{ color: "var(--muted)" }}>
+                        SUBJECT
                       </div>
-                      <div className="text-xl font-bold text-white">
-                        {selectedEmail.subject}
-                      </div>
+                      <div className="text-xl font-bold">{selectedEmail.subject}</div>
                     </div>
 
-                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-white/80">
                       {selectedEmail.body}
                     </div>
                   </div>
@@ -233,40 +222,47 @@ export default function Home() {
               ) : (
                 <motion.div key="list" className="p-2 h-full">
                   {inbox.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <div className="flex flex-col items-center justify-center h-64 text-white/45">
                       <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
-                      <p className="font-mono text-sm uppercase tracking-widest">
-                        Awaiting transmissions...
-                      </p>
+                      <p className="q-title text-xs">AWAITING TRANSMISSIONS...</p>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      {inbox.map((msg, idx) => (
+                    <div className="space-y-2 p-2">
+                      {inbox.map((msg) => (
                         <motion.div
                           key={msg.id}
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.03 }}
-                          className="inbox-item p-4 cursor-pointer group"
+                          className="p-4 rounded-xl cursor-pointer transition-all"
+                          style={{
+                            background: "rgba(0,0,0,0.35)",
+                            border: "1px solid rgba(255,255,255,0.06)",
+                          }}
+                          onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLDivElement).style.border =
+                              "1px solid rgba(46,246,255,0.35)";
+                            (e.currentTarget as HTMLDivElement).style.background =
+                              "rgba(46,246,255,0.04)";
+                          }}
+                          onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLDivElement).style.border =
+                              "1px solid rgba(255,255,255,0.06)";
+                            (e.currentTarget as HTMLDivElement).style.background =
+                              "rgba(0,0,0,0.35)";
+                          }}
                           onClick={() => setSelectedEmail(msg)}
-                          data-testid={`row-email-${msg.id}`}
                         >
                           <div className="flex justify-between items-start mb-2">
-                            <div className="font-mono text-sm text-primary truncate max-w-[70%] neon-text">
+                            <div className="font-mono text-sm truncate max-w-[70%]" style={{ color: "var(--cyan2)" }}>
                               {msg.sender}
                             </div>
-                            <div className="text-xs text-muted-foreground font-mono">
-                              {msg.timestamp
-                                ? new Date(msg.timestamp as any).toLocaleString()
-                                : ""}
+                            <div className="text-xs font-mono" style={{ color: "var(--muted)" }}>
+                              {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
                             </div>
                           </div>
 
-                          <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
-                            {msg.subject}
-                          </div>
-
-                          <div className="text-sm text-muted-foreground truncate">
+                          <div className="font-bold mb-1 truncate">{msg.subject}</div>
+                          <div className="text-sm truncate" style={{ color: "var(--muted)" }}>
                             {msg.preview}
                           </div>
                         </motion.div>
