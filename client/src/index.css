@@ -1,99 +1,118 @@
-/* ===== QUANTUM MAIL ORIGINAL UI ===== */
+/* ===== QUANTUM MAIL (ORIGINAL LOOK) ===== */
 
-body {
-  margin: 0;
-  font-family: 'Rajdhani', sans-serif;
-  color: white;
+:root{
+  --bg0:#05060b;
+  --bg1:#070a14;
+  --panel: rgba(10, 12, 18, 0.72);
+  --panel2: rgba(10, 12, 18, 0.55);
+  --stroke: rgba(255,255,255,0.07);
 
-  background: radial-gradient(circle at top, #0f172a, #020617);
+  --cyan:#2EF6FF;
+  --cyan2:#00E7FF;
+
+  --purple:#C026FF;
+  --purple2:#8B5CF6;
+
+  --text: rgba(255,255,255,0.92);
+  --muted: rgba(255,255,255,0.55);
 }
 
-/* PANEL PRINCIPAL */
-
-.glass-panel {
-
-  position: relative;
-
-  backdrop-filter: blur(12px);
-
-  background: rgba(15,23,42,0.6);
-
-  border-radius: 16px;
-
-  border: 1px solid rgba(255,255,255,0.05);
-
-  overflow: hidden;
-}
-
-/* LUZ LATERAL */
-
-.glass-panel::before{
-
-  content:"";
-
-  position:absolute;
-
-  left:0;
-
-  top:0;
-
-  width:4px;
-
+html, body{
   height:100%;
-
-  background: linear-gradient(
-    to bottom,
-    #00eaff,
-    #d946ef
-  );
-
 }
 
-/* EMAIL BOX */
+body{
+  margin:0;
+  color: var(--text);
+  font-family: 'Rajdhani', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
-.email-box{
-
-  background: rgba(0,0,0,0.5);
-
-  border:1px solid rgba(255,255,255,0.08);
-
-  border-radius:12px;
-
+  background:
+    radial-gradient(1200px 600px at 40% -10%, rgba(46,246,255,0.12), transparent 55%),
+    radial-gradient(900px 500px at 90% 10%, rgba(192,38,255,0.10), transparent 55%),
+    radial-gradient(900px 700px at 30% 110%, rgba(0,231,255,0.08), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg0));
 }
 
-/* INBOX ITEM */
-
-.inbox-item{
-
-  background: rgba(0,0,0,0.4);
-
-  border:1px solid rgba(255,255,255,0.05);
-
-  border-radius:12px;
-
-  transition: all 0.2s ease;
-
+/* Panel glass */
+.q-panel{
+  background: var(--panel);
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.45),
+    inset 0 0 0 1px rgba(255,255,255,0.02);
+  overflow:hidden;
+  position:relative;
 }
 
-.inbox-item:hover{
-
-  border-color:#00eaff;
-
-  background: rgba(0,234,255,0.05);
-
+/* barra lateral glow (cyan o purple) */
+.q-bar-cyan::before,
+.q-bar-purple::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  width:4px;
+  height:100%;
+}
+.q-bar-cyan::before{
+  background: linear-gradient(180deg, var(--cyan), rgba(46,246,255,0.2));
+  box-shadow: 0 0 30px rgba(46,246,255,0.25);
+}
+.q-bar-purple::before{
+  background: linear-gradient(180deg, var(--purple), rgba(192,38,255,0.2));
+  box-shadow: 0 0 30px rgba(192,38,255,0.25);
 }
 
-/* SCROLLBAR */
-
-::-webkit-scrollbar{
-  width:8px;
+/* Titulares estilo “tech” */
+.q-title{
+  font-family: 'Orbitron', system-ui, sans-serif;
+  letter-spacing: .18em;
+  text-transform: uppercase;
 }
 
+/* Campo email */
+.q-email{
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 14px;
+}
+
+/* Botones outline (cyan / purple) */
+.q-btn{
+  border-radius: 12px;
+  background: rgba(0,0,0,0.20);
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: .18s ease;
+}
+.q-btn:hover{
+  transform: translateY(-1px);
+}
+
+.q-btn-cyan{
+  border-color: rgba(46,246,255,0.35) !important;
+  color: var(--cyan2) !important;
+}
+.q-btn-cyan:hover{
+  box-shadow: 0 0 18px rgba(46,246,255,0.18);
+  background: rgba(46,246,255,0.06);
+}
+
+.q-btn-purple{
+  border-color: rgba(192,38,255,0.35) !important;
+  color: var(--purple) !important;
+}
+.q-btn-purple:hover{
+  box-shadow: 0 0 18px rgba(192,38,255,0.18);
+  background: rgba(192,38,255,0.06);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{ width:8px; }
 ::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,0.15);
-  border-radius:4px;
+  background: rgba(255,255,255,0.14);
+  border-radius: 8px;
 }
-
-::-webkit-scrollbar-track{
-  background: rgba(0,0,0,0.4);
-}
+::-webkit-scrollbar-track{ background: rgba(0,0,0,0.35); }
