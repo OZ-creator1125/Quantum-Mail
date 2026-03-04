@@ -8,30 +8,41 @@ export const useMailSession = () => {
   const [inbox, setInbox] = useState<EmailMessage[]>([]);
   const [timeLeft, setTimeLeft] = useState<number>(600);
   const [isPaused, setIsPaused] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
 
-  // ✅ RESET TOTAL: borra todo y crea un correo REAL nuevo
-  const handleReset = useCallback(async () => {
-    try {
-      // 1) borra todo
-      setInbox([]);
-      setToken("");
-      setIsPaused(false);
-      setTimeLeft(600);
+  // ✅ Init: carga sesión sin historial
+  useEffect(() => {
+    const saved = localStorage.getItem("quantum_session");
 
-      // 2) borra storage
-      localStorage.removeItem("quantum_session");
+    if (saved) {
+      const parsed = JSON.parse(saved);
 
-      // 3) crea correo REAL nuevo
-      const s = await createSession(); // { address, token }
+      setCurrentEmail(parsed.currentEmail || "");
+      setToken(parsed.token || "");
+      setInbox(parsed.inbox || []);
 
-      // 4) setea estado
+      const elapsed = Math.floor((Date.now() - (parsed.lastSaved || Date.now())) / 1000);
+      const newTime = parsed.isPaused ? parsed.timeLeft : (parsed.timeLeft - elapsed);
+
+      if (newTime <= 0) {
+        // si expiró, fuerza reset
+        setTimeLeft(0);
+      } else {
+        setTimeLeft(newTime);
+        setIsPaused(!!parsed.isPaused);
+      }
+      return;
+    }
+
+    // si no hay sesión guardada, crea una nueva REAL
+    (async () => {
+      const s = await createSession();
       setCurrentEmail(s.address);
       setToken(s.token);
+      setInbox([]);
+      setTimeLeft(600);
+      setIsPaused(false);
 
-      // 5) guarda sesión limpia
       localStorage.setItem(
         "quantum_session",
         JSON.stringify({
@@ -41,51 +52,12 @@ export const useMailSession = () => {
           timeLeft: 600,
           isPaused: false,
           lastSaved: Date.now(),
-        }),
+        })
       );
-    } catch (e) {
-      console.error("RESET REAL ERROR:", e);
-    }
+    })();
   }, []);
 
-  // ✅ BOOT: al abrir la app, usar sesión guardada o crear una real
-  useEffect(() => {
-    const boot = async () => {
-      try {
-        const savedSession = localStorage.getItem("quantum_session");
-
-        if (savedSession) {
-          const parsed = JSON.parse(savedSession);
-
-          setCurrentEmail(parsed.currentEmail || "");
-          setToken(parsed.token || "");
-          setInbox(Array.isArray(parsed.inbox) ? parsed.inbox : []);
-
-          const elapsed = Math.floor((Date.now() - (parsed.lastSaved || Date.now())) / 1000);
-          const newTime = parsed.isPaused ? parsed.timeLeft : (parsed.timeLeft - elapsed);
-
-          if (!newTime || newTime <= 0) {
-            await handleReset();
-            return;
-          }
-
-          setTimeLeft(newTime);
-          setIsPaused(!!parsed.isPaused);
-          return;
-        }
-
-        // primera vez: crea correo REAL
-        await handleReset();
-      } catch (e) {
-        console.error("BOOT ERROR:", e);
-        await handleReset();
-      }
-    };
-
-    boot();
-  }, [handleReset]);
-
-  // ✅ SAVE: guarda cambios en storage (SIN HISTORIAL)
+  // ✅ Persist (sin historial siempre)
   useEffect(() => {
     if (!currentEmail) return;
 
@@ -98,20 +70,48 @@ export const useMailSession = () => {
         timeLeft,
         isPaused,
         lastSaved: Date.now(),
-      }),
+      })
     );
   }, [currentEmail, token, inbox, timeLeft, isPaused]);
 
-  // ✅ TIMER: cuenta regresiva
+  // ✅ Reset: nuevo correo real + limpia inbox
+  const handleReset = useCallback(async () => {
+    try {
+      localStorage.removeItem("quantum_session");
+
+      setInbox([]);
+      setToken("");
+      setIsPaused(false);
+      setTimeLeft(600);
+
+      const s = await createSession();
+      setCurrentEmail(s.address);
+      setToken(s.token);
+
+      localStorage.setItem(
+        "quantum_session",
+        JSON.stringify({
+          currentEmail: s.address,
+          token: s.token,
+          inbox: [],
+          timeLeft: 600,
+          isPaused: false,
+          lastSaved: Date.now(),
+        })
+      );
+    } catch (e) {
+      console.error("RESET ERROR:", e);
+    }
+  }, []);
+
+  // ✅ Timer: si llega a 0, resetea
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-
     if (isPaused || !currentEmail || timeLeft <= 0) return;
 
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // cuando llega a 0, resetea todo
           handleReset();
           return 0;
         }
@@ -124,88 +124,76 @@ export const useMailSession = () => {
     };
   }, [isPaused, currentEmail, timeLeft, handleReset]);
 
-  // ✅ POLLING REAL: trae correos con token
+  // ✅ Polling Inbox REAL
   useEffect(() => {
-    if (pollRef.current) clearInterval(pollRef.current);
-
     if (!token || isPaused) return;
 
-const tick = async () => {
-  setIsLoading(true);
-  try {
-    const res = await fetch(
-      "https://tempmail-backend-production.up.railway.app/api/inbox",
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const tick = async () => {
+      try {
+        const res = await fetch(
+          "https://tempmail-backend-production.up.railway.app/api/inbox",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-    const data = await res.json();
+        const data = await res.json();
 
-    const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
+        const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
 
-    if (Array.isArray(list)) {
-      const mapped = list.map((m: any) => ({
-        id: m.id ?? m["@id"] ?? crypto.randomUUID(),
-        sender: m?.from?.address ?? "unknown",
-        subject: m?.subject ?? "(no subject)",
-        preview: m?.intro ?? "",
-        body: m?.intro ?? "",
-        timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
-      }));
+        if (Array.isArray(list)) {
+          const mapped = list.map((m: any) => ({
+            id: m.id ?? m["@id"] ?? crypto.randomUUID(),
+            sender: m?.from?.address ?? "unknown",
+            subject: m?.subject ?? "(no subject)",
+            preview: m?.intro ?? "",
+            body: m?.intro ?? "",
+            timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+          }));
 
-      setInbox(mapped);
-    }
-  } catch (err) {
-    console.error("Error obteniendo inbox:", err);
-  } finally {
-    setIsLoading(false);
-  }
-};
-    // 1) corre inmediato
-    tick();
-    // 2) luego cada 4s
-    pollRef.current = setInterval(tick, 4000);
-
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+          setInbox(mapped);
+        }
+      } catch (err) {
+        console.error("INBOX ERROR:", err);
+      }
     };
+
+    tick();
+    const interval = setInterval(tick, 4000);
+    return () => clearInterval(interval);
   }, [token, isPaused]);
 
   const togglePause = () => setIsPaused((p) => !p);
   const addExtraTime = () => setTimeLeft(600);
 
-  // ✅ NEW: crea sesión REAL (igual que reset pero sin tocar timerRef directo)
-  const setRealSession = useCallback(
-    (session: { address: string; token: string }) => {
-      setCurrentEmail(session.address);
-      setToken(session.token);
-      setInbox([]);
-      setTimeLeft(600);
-      setIsPaused(false);
+  // ✅ New session desde Home (NEW button)
+  const setRealSession = useCallback((session: { address: string; token: string }) => {
+    setCurrentEmail(session.address);
+    setToken(session.token);
+    setInbox([]);
+    setTimeLeft(600);
+    setIsPaused(false);
 
-      localStorage.setItem(
-        "quantum_session",
-        JSON.stringify({
-          currentEmail: session.address,
-          token: session.token,
-          inbox: [],
-          timeLeft: 600,
-          isPaused: false,
-          lastSaved: Date.now(),
-        }),
-      );
-    },
-    [],
-  );
+    localStorage.setItem(
+      "quantum_session",
+      JSON.stringify({
+        currentEmail: session.address,
+        token: session.token,
+        inbox: [],
+        timeLeft: 600,
+        isPaused: false,
+        lastSaved: Date.now(),
+      })
+    );
+  }, []);
 
   return {
-  currentEmail,
-  token,
-  inbox,
-  timeLeft,
-  isPaused,
-  isLoading, // ✅
-  togglePause,
-  handleReset,
-  addExtraTime,
-  setRealSession,
+    currentEmail,
+    token,
+    inbox,
+    timeLeft,
+    isPaused,
+    togglePause,
+    handleReset,
+    addExtraTime,
+    setRealSession,
+  };
 };
