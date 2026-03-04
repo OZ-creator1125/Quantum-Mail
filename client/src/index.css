@@ -1,23 +1,21 @@
 /* ===== QUANTUM MAIL (ORIGINAL PREMIUM FUTURISTIC UI) ===== */
 
-/* No cambies colores: solo dejamos variables para usarlas en layout */
 :root{
   --bg0:#020617;
   --bg1:#000000;
   --panel: rgba(15,23,42,0.65);
-  --panel2: rgba(0,0,0,0.40);
 
   --muted: rgba(148,163,184,0.85);
 
-  --cyan: #00ffd0;     /* cian del diseño */
-  --cyan2:#19f3ff;     /* cian “texto” */
-  --purple:#b026ff;    /* morado del timer */
+  /* COLORES (NO TOCAR) */
+  --cyan: #00ffd0;
+  --cyan2:#19f3ff;
+  --purple:#b026ff;
 }
 
 body {
   margin: 0;
   font-family: "Rajdhani", sans-serif;
-
   background:
     radial-gradient(circle at 20% 20%, rgba(0,255,200,0.08), transparent 40%),
     radial-gradient(circle at 80% 30%, rgba(176,38,255,0.10), transparent 40%),
@@ -26,7 +24,6 @@ body {
   color: white;
 }
 
-/* ===== GLASS PANELS ===== */
 .glass-panel {
   backdrop-filter: blur(14px);
   background: var(--panel);
@@ -37,26 +34,6 @@ body {
   border-radius: 18px;
 }
 
-/* ===== OPTIONAL: inner soft border for panels ===== */
-.glass-inner {
-  background: rgba(0,0,0,0.28);
-  border: 1px solid rgba(255,255,255,0.05);
-  border-radius: 16px;
-}
-
-/* ===== NEON HELPERS (no color change, only glow) ===== */
-.neon-cyan {
-  box-shadow:
-    0 0 12px rgba(0,255,200,0.25),
-    0 0 24px rgba(0,255,200,0.12);
-}
-.neon-purple {
-  box-shadow:
-    0 0 12px rgba(176,38,255,0.22),
-    0 0 24px rgba(176,38,255,0.10);
-}
-
-/* ===== TYPO & SPACING (ACOMODO COMO TU FOTO) ===== */
 .q-title {
   font-family: "Orbitron", system-ui, sans-serif;
   letter-spacing: 0.22em;
@@ -75,19 +52,18 @@ body {
   font-family: "Orbitron", system-ui, sans-serif;
   letter-spacing: 0.10em;
   font-weight: 900;
-  font-size: clamp(52px, 7vw, 76px); /* grande como la foto */
+  /* Responsive perfecto móvil/lap */
+  font-size: clamp(44px, 8vw, 76px);
   line-height: 1;
   color: var(--purple);
 }
 
-/* “input” premium (email) */
 .q-input {
   padding: 18px 18px;
   border-radius: 16px;
-  font-size: clamp(18px, 2.2vw, 26px);
+  font-size: clamp(16px, 2.2vw, 26px);
 }
 
-/* botones delgados como la foto */
 .q-btn-tight {
   height: 44px;
   padding: 0 18px;
@@ -97,14 +73,12 @@ body {
   font-size: 12px;
 }
 
-/* ===== BOX EMAIL (igual que el original) ===== */
 .q-email {
   background: rgba(0,0,0,0.55);
   border: 1px solid rgba(0,255,200,0.22);
   box-shadow: 0 0 12px rgba(0,255,200,0.18);
 }
 
-/* ===== Scrollbar ===== */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-thumb {
   background: rgba(0,255,200,0.28);
