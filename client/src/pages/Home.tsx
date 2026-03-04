@@ -22,25 +22,19 @@ export default function Home() {
     useMailSession();
 
   const { toast } = useToast();
-
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-
-  // premium banner
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      // copy automatically
       await navigator.clipboard.writeText(s.address);
 
-      // banner
       setShowCopiedBanner(true);
       setTimeout(() => setShowCopiedBanner(false), 3000);
 
-      // set COPY button state
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
 
@@ -84,7 +78,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
-      {/* Premium banner */}
       {showCopiedBanner && (
         <div className="mb-4 rounded-xl border border-white/10 bg-black/40 backdrop-blur px-4 py-3 text-center">
           <p className="q-title text-xs" style={{ color: "var(--cyan2)" }}>
@@ -93,7 +86,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Header (más discreto como la foto) */}
       <header className="flex items-center gap-3 mb-6 md:mb-8 mt-1">
         <ShieldAlert className="w-7 h-7" style={{ color: "var(--cyan2)" }} />
         <h1 className="q-title text-lg md:text-xl font-bold" style={{ color: "var(--cyan2)" }}>
@@ -101,17 +93,13 @@ export default function Home() {
         </h1>
       </header>
 
-      {/* Top Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-8">
-        {/* Current Identity */}
         <div className="lg:col-span-2 glass-panel p-6 relative overflow-hidden">
-          <div
-            className="absolute top-0 left-0 w-1 h-full"
-            style={{ background: "var(--cyan2)" }}
-          />
+          <div className="absolute top-0 left-0 w-1 h-full" style={{ background: "var(--cyan2)" }} />
           <div className="q-kicker mb-2">CURRENT IDENTITY</div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          {/* Responsive: en móvil se apila, en laptop se alinea */}
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
             <div className="q-email q-input flex-1 w-full font-mono text-white break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
@@ -119,7 +107,7 @@ export default function Home() {
             <Button
               onClick={handleCopy}
               data-testid="button-copy"
-              className="q-btn-tight w-full sm:w-auto gap-2 bg-black/40 border border-white/10 hover:bg-black/50"
+              className="q-btn-tight w-full md:w-auto gap-2 bg-black/40 border border-white/10 hover:bg-black/50"
               style={{ color: "var(--cyan2)" }}
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
@@ -128,20 +116,16 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Timer */}
         <div className="glass-panel p-6 flex flex-col justify-center items-center relative overflow-hidden">
-          <div
-            className="absolute top-0 left-0 w-1 h-full"
-            style={{ background: "var(--purple)" }}
-          />
+          <div className="absolute top-0 left-0 w-1 h-full" style={{ background: "var(--purple)" }} />
 
           <div className="q-kicker">TIME REMAINING</div>
-
           <div className={`q-timer mt-3 ${timeLeft < 60 ? "animate-pulse" : ""}`}>
             {formatTime(timeLeft)}
           </div>
 
-          <div className="mt-5 flex gap-3 w-full">
+          {/* Responsive: en móvil puede bajar a columna si falta espacio */}
+          <div className="mt-5 flex flex-col sm:flex-row gap-3 w-full">
             <Button
               variant="outline"
               onClick={togglePause}
@@ -167,9 +151,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[520px]">
-        {/* Inbox Section */}
         <div className="glass-panel flex flex-col overflow-hidden relative">
           <div className="p-5 border-b border-white/10 bg-black/30 flex items-center gap-2">
             <InboxIcon className="w-5 h-5" style={{ color: "var(--cyan2)" }} />
@@ -179,6 +161,7 @@ export default function Home() {
                 ({inbox.length})
               </span>
             </h2>
+
             {isPaused && (
               <span className="ml-auto text-xs uppercase animate-pulse q-title" style={{ color: "var(--purple)" }}>
                 Receiving Paused
