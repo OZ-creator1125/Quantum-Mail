@@ -1,118 +1,113 @@
-/* ===== QUANTUM MAIL (ORIGINAL LOOK) ===== */
+/* ===== QUANTUM MAIL (ORIGINAL PREMIUM FUTURISTIC UI) ===== */
 
+/* No cambies colores: solo dejamos variables para usarlas en layout */
 :root{
-  --bg0:#05060b;
-  --bg1:#070a14;
-  --panel: rgba(10, 12, 18, 0.72);
-  --panel2: rgba(10, 12, 18, 0.55);
-  --stroke: rgba(255,255,255,0.07);
+  --bg0:#020617;
+  --bg1:#000000;
+  --panel: rgba(15,23,42,0.65);
+  --panel2: rgba(0,0,0,0.40);
 
-  --cyan:#2EF6FF;
-  --cyan2:#00E7FF;
+  --muted: rgba(148,163,184,0.85);
 
-  --purple:#C026FF;
-  --purple2:#8B5CF6;
-
-  --text: rgba(255,255,255,0.92);
-  --muted: rgba(255,255,255,0.55);
+  --cyan: #00ffd0;     /* cian del diseño */
+  --cyan2:#19f3ff;     /* cian “texto” */
+  --purple:#b026ff;    /* morado del timer */
 }
 
-html, body{
-  height:100%;
-}
-
-body{
-  margin:0;
-  color: var(--text);
-  font-family: 'Rajdhani', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+body {
+  margin: 0;
+  font-family: "Rajdhani", sans-serif;
 
   background:
-    radial-gradient(1200px 600px at 40% -10%, rgba(46,246,255,0.12), transparent 55%),
-    radial-gradient(900px 500px at 90% 10%, rgba(192,38,255,0.10), transparent 55%),
-    radial-gradient(900px 700px at 30% 110%, rgba(0,231,255,0.08), transparent 60%),
-    linear-gradient(180deg, var(--bg1), var(--bg0));
+    radial-gradient(circle at 20% 20%, rgba(0,255,200,0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(176,38,255,0.10), transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(0,255,150,0.06), transparent 40%),
+    linear-gradient(180deg, var(--bg0), var(--bg0) 40%, var(--bg1));
+  color: white;
 }
 
-/* Panel glass */
-.q-panel{
-  background: var(--panel);
-  border: 1px solid var(--stroke);
-  border-radius: 18px;
+/* ===== GLASS PANELS ===== */
+.glass-panel {
   backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--panel);
+  border: 1px solid rgba(255,255,255,0.06);
   box-shadow:
-    0 10px 40px rgba(0,0,0,0.45),
-    inset 0 0 0 1px rgba(255,255,255,0.02);
-  overflow:hidden;
-  position:relative;
+    0 0 22px rgba(0,255,200,0.07),
+    inset 0 0 10px rgba(255,255,255,0.03);
+  border-radius: 18px;
 }
 
-/* barra lateral glow (cyan o purple) */
-.q-bar-cyan::before,
-.q-bar-purple::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:0;
-  width:4px;
-  height:100%;
-}
-.q-bar-cyan::before{
-  background: linear-gradient(180deg, var(--cyan), rgba(46,246,255,0.2));
-  box-shadow: 0 0 30px rgba(46,246,255,0.25);
-}
-.q-bar-purple::before{
-  background: linear-gradient(180deg, var(--purple), rgba(192,38,255,0.2));
-  box-shadow: 0 0 30px rgba(192,38,255,0.25);
+/* ===== OPTIONAL: inner soft border for panels ===== */
+.glass-inner {
+  background: rgba(0,0,0,0.28);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 16px;
 }
 
-/* Titulares estilo “tech” */
-.q-title{
-  font-family: 'Orbitron', system-ui, sans-serif;
-  letter-spacing: .18em;
+/* ===== NEON HELPERS (no color change, only glow) ===== */
+.neon-cyan {
+  box-shadow:
+    0 0 12px rgba(0,255,200,0.25),
+    0 0 24px rgba(0,255,200,0.12);
+}
+.neon-purple {
+  box-shadow:
+    0 0 12px rgba(176,38,255,0.22),
+    0 0 24px rgba(176,38,255,0.10);
+}
+
+/* ===== TYPO & SPACING (ACOMODO COMO TU FOTO) ===== */
+.q-title {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
-/* Campo email */
-.q-email{
-  background: rgba(0,0,0,0.45);
-  border: 1px solid rgba(255,255,255,0.10);
+.q-kicker {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.q-timer {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.10em;
+  font-weight: 900;
+  font-size: clamp(52px, 7vw, 76px); /* grande como la foto */
+  line-height: 1;
+  color: var(--purple);
+}
+
+/* “input” premium (email) */
+.q-input {
+  padding: 18px 18px;
+  border-radius: 16px;
+  font-size: clamp(18px, 2.2vw, 26px);
+}
+
+/* botones delgados como la foto */
+.q-btn-tight {
+  height: 44px;
+  padding: 0 18px;
   border-radius: 14px;
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.20em;
+  font-size: 12px;
 }
 
-/* Botones outline (cyan / purple) */
-.q-btn{
-  border-radius: 12px;
-  background: rgba(0,0,0,0.20);
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: .18s ease;
-}
-.q-btn:hover{
-  transform: translateY(-1px);
+/* ===== BOX EMAIL (igual que el original) ===== */
+.q-email {
+  background: rgba(0,0,0,0.55);
+  border: 1px solid rgba(0,255,200,0.22);
+  box-shadow: 0 0 12px rgba(0,255,200,0.18);
 }
 
-.q-btn-cyan{
-  border-color: rgba(46,246,255,0.35) !important;
-  color: var(--cyan2) !important;
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(0,255,200,0.28);
+  border-radius: 4px;
 }
-.q-btn-cyan:hover{
-  box-shadow: 0 0 18px rgba(46,246,255,0.18);
-  background: rgba(46,246,255,0.06);
-}
-
-.q-btn-purple{
-  border-color: rgba(192,38,255,0.35) !important;
-  color: var(--purple) !important;
-}
-.q-btn-purple:hover{
-  box-shadow: 0 0 18px rgba(192,38,255,0.18);
-  background: rgba(192,38,255,0.06);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar{ width:8px; }
-::-webkit-scrollbar-thumb{
-  background: rgba(255,255,255,0.14);
-  border-radius: 8px;
-}
-::-webkit-scrollbar-track{ background: rgba(0,0,0,0.35); }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.35); }
