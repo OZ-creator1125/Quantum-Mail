@@ -24,33 +24,40 @@ export default function Home() {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
+
+  // premium banner
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
+
   const handleRealNew = async () => {
     try {
       const s = await createSession();
+
+      // ✅ copy automatically (ONLY ONCE)
       await navigator.clipboard.writeText(s.address);
-      // copy automatically
-await navigator.clipboard.writeText(s.address);
+
+      // ✅ premium banner (3s)
       setShowCopiedBanner(true);
-setTimeout(() => setShowCopiedBanner(false), 3000);
-      
-// show notification + change COPY button state
-setCopied(true);
+      setTimeout(() => setShowCopiedBanner(false), 3000);
 
-toast({
-  title: "✅ Email copied to clipboard",
-  description: "You can now paste it anywhere (Ctrl+V / Cmd+V)",
-  className: "bg-primary text-primary-foreground font-display",
-});
+      // ✅ set COPY button to "COPIED" (2s)
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
 
-setTimeout(() => setCopied(false), 2000);
+      // ✅ toast in English
+      toast({
+        title: "✅ Email copied to clipboard",
+        description: "Paste anywhere (Ctrl+V / Cmd+V)",
+        className: "bg-primary text-primary-foreground font-display",
+      });
+
+      // ✅ switch session + clear selected email
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
     } catch (err: any) {
       console.error(err);
       toast({
-        title: "❌ Error creando sesión real",
-        description: "Revisa consola (F12) y Railway logs",
+        title: "❌ Error creating new session",
+        description: "Check console (F12) and Railway logs",
         className: "bg-destructive text-destructive-foreground font-display",
       });
     }
@@ -59,29 +66,34 @@ setTimeout(() => setCopied(false), 2000);
   const handleCopy = () => {
     if (!currentEmail) return;
     navigator.clipboard.writeText(currentEmail);
+
     setCopied(true);
     toast({
-      title: "Email copied to clipboard!",
+      title: "✅ Email copied to clipboard",
+      description: "Paste anywhere (Ctrl+V / Cmd+V)",
       className: "bg-primary text-primary-foreground font-display",
     });
+
     setTimeout(() => setCopied(false), 2000);
   };
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60)
-      .toString()
-      .padStart(2, "0");
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
     const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
   return (
     <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+      {/* Premium banner */}
       {showCopiedBanner && (
-  <div className="w-full bg-green-500 text-black font-bold text-center py-2 mb-4 rounded-md animate-pulse">
-    NEW EMAIL GENERATED AND COPIED
-  </div>
-)}
+        <div className="mb-4 rounded-xl border border-primary/30 bg-black/40 backdrop-blur px-4 py-3 text-center">
+          <p className="font-display tracking-widest text-primary text-sm">
+            NEW EMAIL GENERATED & COPIED
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <header className="flex items-center gap-3 mb-8">
         <ShieldAlert className="w-8 h-8 text-primary" />
@@ -97,10 +109,12 @@ setTimeout(() => setCopied(false), 2000);
           <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
             Current Identity
           </h2>
+
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <div className="flex-1 w-full bg-black/50 border border-primary/20 rounded-lg p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
+
             <Button
               size="lg"
               className="w-full sm:w-auto gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
@@ -122,6 +136,7 @@ setTimeout(() => setCopied(false), 2000);
           <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
             Time Remaining
           </h2>
+
           <div
             className={`text-5xl font-bold font-display tracking-wider mb-4 transition-colors ${
               timeLeft < 60 ? "text-destructive animate-pulse" : "text-accent"
@@ -129,6 +144,7 @@ setTimeout(() => setCopied(false), 2000);
           >
             {formatTime(timeLeft)}
           </div>
+
           <div className="flex gap-2 w-full font-display">
             <Button
               variant="outline"
