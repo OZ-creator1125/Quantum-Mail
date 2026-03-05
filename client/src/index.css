@@ -102,7 +102,7 @@ body {
 }
 
 /* =========================
-   Grid
+   Grid (3 paneles, NO archives)
    ========================= */
 .qm-grid {
   display: grid;
@@ -525,19 +525,8 @@ body {
   transform: translateY(1px);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar {
-  width: 9px;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 200, 0.22);
-  border-radius: 999px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.35);
-}
-
 /* ===== Expiring warning + danger timer (last minute) ===== */
+
 .qm-expire-warning {
   margin-top: 12px;
   display: inline-flex;
@@ -580,7 +569,7 @@ body {
 .qm-about {
   margin-top: 18px;
   padding: 14px 6px;
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(255,255,255,0.72);
 }
 
 .qm-about__title {
@@ -589,7 +578,7 @@ body {
   text-transform: uppercase;
   font-size: 14px;
   margin: 0 0 8px 0;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(255,255,255,0.86);
 }
 
 .qm-about__text {
@@ -597,4 +586,16 @@ body {
   line-height: 1.6;
   font-size: 14px;
   max-width: 900px;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 200, 0.22);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
 }
