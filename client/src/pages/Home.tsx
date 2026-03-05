@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { useMailSession } from "@/hooks/use-mail-session";
 import { EmailMessage } from "@/lib/mock-api";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ShieldAlert,
   RotateCcw,
+  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
@@ -21,130 +22,62 @@ import { createSession } from "@/lib/api";
 const SHOW_ARCHIVES = false; // ✅ ARCHIVES OFF (sin huecos)
 
 export default function Home() {
-  const { currentEmail, inbox, timeLeft, isPaused, togglePause, setRealSession } =
-    useMailSession();
+  const {
+    currentEmail,
+    inbox,
+    timeLeft,
+    isPaused,
+    togglePause,
+    setRealSession,
+    isExpiring,
+  } = useMailSession();
 
   const { toast } = useToast();
-
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-
-  // Banner reutilizado (no cambiamos UI)
-  const [bannerText, setBannerText] = useState<string | null>(null);
-  const bannerTimerRef = useRef<number | null>(null);
-
-  // Para evitar doble auto-init (React StrictMode)
-  const didAutoInit = useRef(false);
-
-  // Para evitar spamear el warning del último minuto
-  const lastMinuteWarned = useRef(false);
+  const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(Math.max(0, seconds) / 60)
-      .toString()
-      .padStart(2, "0");
-    const s = (Math.max(0, seconds) % 60).toString().padStart(2, "0");
+    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
   const timeText = useMemo(() => formatTime(timeLeft), [timeLeft]);
 
-  const showBanner = (text: string, ms = 2500) => {
-    setBannerText(text);
-    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
-    bannerTimerRef.current = window.setTimeout(() => setBannerText(null), ms);
-  };
-
-  // ✅ 1) AUTO: al abrir página crea sesión (NO clipboard)
-  useEffect(() => {
-    if (didAutoInit.current) return;
-    didAutoInit.current = true;
-
-    (async () => {
-      try {
-        const s = await createSession();
-        setRealSession({ address: s.address, token: s.token });
-        setSelectedEmail(null);
-        lastMinuteWarned.current = false;
-        showBanner("NEW EMAIL GENERATED", 2000);
-      } catch (err) {
-        console.error(err);
-        toast({
-          title: "❌ Error creating session",
-          description: "Click NEW to try again.",
-          className: "bg-destructive text-destructive-foreground font-display",
-        });
+  // ✅ Copiar sin “popup”: solo si ya existe permiso concedido
+  const tryAutoCopyIfGranted = useCallback(async (text: string) => {
+    try {
+      // Permissions API (no existe en todos los navegadores)
+      const navAny = navigator as any;
+      if (navAny?.permissions?.query) {
+        const result = await navAny.permissions.query({ name: "clipboard-write" });
+        if (result?.state !== "granted") return; // NO intentamos -> NO popup
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+      await navigator.clipboard.writeText(text);
+    } catch {
+      // si falla, no hacemos nada (evitamos prompts)
+    }
   }, []);
 
-  // ✅ 2) WARNING en último minuto (<= 60s) — sin cambiar diseño, usamos banner
-  useEffect(() => {
-    if (isPaused) return;
-    if (timeLeft <= 60 && timeLeft > 0 && !lastMinuteWarned.current) {
-      lastMinuteWarned.current = true;
-      showBanner("⚠️ LAST MINUTE — EVERYTHING WILL BE WIPED", 3500);
-      toast({
-        title: "⚠️ Last minute",
-        description: "Your inbox will be wiped when the timer hits 00:00.",
-        className: "bg-destructive text-destructive-foreground font-display",
-      });
-    }
-    if (timeLeft > 60) {
-      // por si regeneras, resetea el flag
-      lastMinuteWarned.current = false;
-    }
-  }, [timeLeft, isPaused, toast]);
-
-  // ✅ 3) Cuando llega a 0: wipe + auto NEW (sin pedir click)
-  useEffect(() => {
-    if (isPaused) return;
-    if (timeLeft !== 0) return;
-
-    (async () => {
-      try {
-        showBanner("SESSION EXPIRED — GENERATING NEW EMAIL...", 1800);
-
-        // limpiamos UI local (inbox y email los controla el hook,
-        // pero selected sí es local)
-        setSelectedEmail(null);
-        setCopied(false);
-
-        // creamos nueva sesión
-        const s = await createSession();
-        setRealSession({ address: s.address, token: s.token });
-
-        lastMinuteWarned.current = false;
-        showBanner("NEW EMAIL GENERATED", 2000);
-      } catch (err) {
-        console.error(err);
-        toast({
-          title: "❌ Error auto-renewing",
-          description: "Click NEW to generate a new email.",
-          className: "bg-destructive text-destructive-foreground font-display",
-        });
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, isPaused]);
-
-  // NEW manual (NO auto-copy para evitar popup)
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      setRealSession({ address: s.address, token: s.token });
-      setSelectedEmail(null);
+      // ✅ (evita popup) Solo autokopia si ya está concedido
+      await tryAutoCopyIfGranted(s.address);
 
-      lastMinuteWarned.current = false;
-      showBanner("NEW EMAIL GENERATED", 2000);
+      setShowCopiedBanner(true);
+      setTimeout(() => setShowCopiedBanner(false), 2500);
 
       toast({
         title: "✅ New email generated",
-        description: "Use COPY if you want it on clipboard.",
+        description: "Press COPY to copy it (or paste if auto-copy is enabled).",
         className: "bg-primary text-primary-foreground font-display",
       });
+
+      setRealSession({ address: s.address, token: s.token });
+      setSelectedEmail(null);
     } catch (err: any) {
       console.error(err);
       toast({
@@ -155,37 +88,31 @@ export default function Home() {
     }
   };
 
-  // COPY (sí es click del usuario => permitido)
   const handleCopy = async () => {
     if (!currentEmail) return;
 
-    try {
-      await navigator.clipboard.writeText(currentEmail);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1400);
+    // ✅ Aquí sí: el usuario hizo click -> permitido pedir permiso si hace falta
+    await navigator.clipboard.writeText(currentEmail);
 
-      showBanner("EMAIL COPIED", 1600);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
 
-      toast({
-        title: "✅ Email copied to clipboard",
-        description: "Paste anywhere (Ctrl+V / Cmd+V)",
-        className: "bg-primary text-primary-foreground font-display",
-      });
-    } catch (e) {
-      console.error(e);
-      toast({
-        title: "⚠️ Clipboard blocked",
-        description: "Browser blocked clipboard. Copy manually.",
-        className: "bg-destructive text-destructive-foreground font-display",
-      });
-    }
+    toast({
+      title: "✅ Email copied to clipboard",
+      description: "Paste anywhere (Ctrl+V / Cmd+V)",
+      className: "bg-primary text-primary-foreground font-display",
+    });
   };
 
   return (
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
-        {/* Banner (reusamos tu banner - no cambiamos diseño base) */}
-        {bannerText && <div className="qm-banner">{bannerText}</div>}
+        {/* Banner */}
+        {showCopiedBanner && (
+          <div className="qm-banner">
+            NEW EMAIL GENERATED
+          </div>
+        )}
 
         {/* Header */}
         <header className="qm-header">
@@ -221,6 +148,14 @@ export default function Home() {
                   <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
                 </Button>
               </div>
+
+              {/* ✅ Warning (último minuto) */}
+              {isExpiring && (
+                <div className="qm-expire-warning">
+                  <AlertTriangle className="qm-expire-warning__ico" />
+                  <span>WARNING: THIS EMAIL WILL EXPIRE IN LESS THAN 1 MINUTE.</span>
+                </div>
+              )}
             </div>
           </section>
 
@@ -230,7 +165,10 @@ export default function Home() {
             <div className="qm-panel__inner qm-panel__inner--center">
               <div className="qm-kicker">TIME REMAINING</div>
 
-              <div className="qm-timer">{timeText}</div>
+              {/* ✅ rojo + blink último minuto */}
+              <div className={`qm-timer ${isExpiring ? "qm-timer--danger" : ""}`}>
+                {timeText}
+              </div>
 
               <div className="qm-timer-actions">
                 <Button
@@ -264,7 +202,6 @@ export default function Home() {
                 <span className="qm-title-text">SECURE_INBOX</span>
                 <span className="qm-title-count">({inbox.length})</span>
               </div>
-
               {isPaused && <div className="qm-paused">RECEIVING PAUSED</div>}
             </div>
 
@@ -339,8 +276,18 @@ export default function Home() {
             </div>
           </section>
 
-          {/* ARCHIVES REMOVED */}
+          {/* ✅ ARCHIVES eliminado */}
         </div>
+
+        {/* ✅ Explicación abajo (simple y limpia) */}
+        <section className="qm-about">
+          <h2 className="qm-about__title">What is Quantum Mail?</h2>
+          <p className="qm-about__text">
+            Quantum Mail is a secure 10-minute temporary inbox designed to protect your real email from spam,
+            data leaks, and unwanted sign-ups. Generate an address instantly, receive messages in real time,
+            and let it self-destruct when the timer ends.
+          </p>
+        </section>
       </div>
     </div>
   );
