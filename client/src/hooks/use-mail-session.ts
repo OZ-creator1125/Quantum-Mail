@@ -11,6 +11,15 @@ type SavedSession = {
   lastSaved: number;
 };
 
+const safeId = () => {
+  try {
+    // crypto.randomUUID puede no existir en algunos navegadores
+    // @ts-ignore
+    if (typeof crypto !== "undefined" && crypto?.randomUUID) return crypto.randomUUID();
+  } catch {}
+  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+};
+
 export const useMailSession = () => {
   const [currentEmail, setCurrentEmail] = useState<string>("");
   const [token, setToken] = useState<string>("");
@@ -23,10 +32,11 @@ export const useMailSession = () => {
 
   const persist = useCallback(
     (partial?: Partial<SavedSession>) => {
-      if (!currentEmail && !(partial?.currentEmail ?? "")) return;
+      const email = partial?.currentEmail ?? currentEmail;
+      if (!email) return;
 
       const payload: SavedSession = {
-        currentEmail: partial?.currentEmail ?? currentEmail,
+        currentEmail: email,
         token: partial?.token ?? token,
         inbox: partial?.inbox ?? inbox,
         timeLeft: partial?.timeLeft ?? timeLeft,
@@ -49,7 +59,6 @@ export const useMailSession = () => {
     setIsExpired(true);
   }, []);
 
-  // ✅ NEW button action: create fresh session and start timer
   const handleReset = useCallback(async () => {
     try {
       localStorage.removeItem("quantum_session");
@@ -79,21 +88,21 @@ export const useMailSession = () => {
       });
     } catch (e) {
       console.error("RESET ERROR:", e);
+      // si falla crear sesión, al menos no crashees
+      clearSession();
     }
-  }, [persist]);
+  }, [persist, clearSession]);
 
-  // ✅ Init: load saved session or create one automatically
+  // INIT
   useEffect(() => {
     const saved = localStorage.getItem("quantum_session");
 
     if (saved) {
       try {
         const parsed: SavedSession = JSON.parse(saved);
-
         const elapsed = Math.floor((Date.now() - (parsed.lastSaved || Date.now())) / 1000);
         const newTime = parsed.isPaused ? parsed.timeLeft : parsed.timeLeft - elapsed;
 
-        // If expired while tab was closed -> require NEW (do NOT auto-generate)
         if (newTime <= 0) {
           clearSession();
           return;
@@ -112,7 +121,7 @@ export const useMailSession = () => {
       }
     }
 
-    // No saved session -> create automatically
+    // no saved -> create automatically
     (async () => {
       try {
         const s = await createSession();
@@ -132,18 +141,19 @@ export const useMailSession = () => {
         });
       } catch (e) {
         console.error("INIT CREATE SESSION ERROR:", e);
+        clearSession();
       }
     })();
   }, [persist, clearSession]);
 
-  // ✅ Persist changes (only if not expired)
+  // PERSIST
   useEffect(() => {
     if (isExpired) return;
     if (!currentEmail) return;
     persist();
   }, [currentEmail, token, inbox, timeLeft, isPaused, isExpired, persist]);
 
-  // ✅ Timer: last minute warning handled in UI; at 0 -> wipe and require NEW
+  // TIMER
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (isExpired) return;
@@ -152,7 +162,6 @@ export const useMailSession = () => {
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          // Expire NOW: clear everything and require NEW
           clearSession();
           return 0;
         }
@@ -165,7 +174,7 @@ export const useMailSession = () => {
     };
   }, [isPaused, currentEmail, timeLeft, isExpired, clearSession]);
 
-  // ✅ Polling Inbox REAL (disabled if expired)
+  // POLLING
   useEffect(() => {
     if (!token || isPaused || isExpired) return;
 
@@ -176,21 +185,33 @@ export const useMailSession = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const data = await res.json();
-        const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
-
-        if (Array.isArray(list)) {
-          const mapped = list.map((m: any) => ({
-            id: m.id ?? m["@id"] ?? crypto.randomUUID(),
-            sender: m?.from?.address ?? "unknown",
-            subject: m?.subject ?? "(no subject)",
-            preview: m?.intro ?? "",
-            body: m?.intro ?? "",
-            timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
-          }));
-
-          setInbox(mapped);
+        if (!res.ok) {
+          // evita crashear si hay 401/500
+          console.warn("INBOX HTTP ERROR:", res.status);
+          return;
         }
+
+        let data: any = null;
+        try {
+          data = await res.json();
+        } catch (e) {
+          console.warn("INBOX JSON PARSE ERROR:", e);
+          return;
+        }
+
+        const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
+        if (!Array.isArray(list)) return;
+
+        const mapped = list.map((m: any) => ({
+          id: m.id ?? m["@id"] ?? safeId(),
+          sender: m?.from?.address ?? "unknown",
+          subject: m?.subject ?? "(no subject)",
+          preview: m?.intro ?? "",
+          body: m?.intro ?? "",
+          timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+        }));
+
+        setInbox(mapped);
       } catch (err) {
         console.error("INBOX ERROR:", err);
       }
@@ -203,7 +224,6 @@ export const useMailSession = () => {
 
   const togglePause = () => setIsPaused((p) => !p);
 
-  // ✅ If Home creates a real new session manually (rare case), keep support
   const setRealSession = useCallback(
     (session: { address: string; token: string }) => {
       setCurrentEmail(session.address);
