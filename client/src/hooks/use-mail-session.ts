@@ -3,79 +3,69 @@ import { EmailMessage } from "../lib/mock-api";
 import { createSession } from "@/lib/api";
 
 type SavedSession = {
-  currentEmail: string;
-  token: string;
-  inbox: EmailMessage[];
-  timeLeft: number;
-  isPaused: boolean;
-  lastSaved: number;
+  currentEmail?: string;
+  token?: string;
+  inbox?: EmailMessage[];
+  timeLeft?: number;
+  isPaused?: boolean;
+  lastSaved?: number;
 };
 
-const safeId = () => {
-  try {
-    // crypto.randomUUID puede no existir en algunos navegadores
-    // @ts-ignore
-    if (typeof crypto !== "undefined" && crypto?.randomUUID) return crypto.randomUUID();
-  } catch {}
-  return `id_${Date.now()}_${Math.random().toString(16).slice(2)}`;
-};
+const STORAGE_KEY = "quantum_session";
+const SESSION_SECONDS = 600; // 10 min
 
 export const useMailSession = () => {
   const [currentEmail, setCurrentEmail] = useState<string>("");
   const [token, setToken] = useState<string>("");
   const [inbox, setInbox] = useState<EmailMessage[]>([]);
-  const [timeLeft, setTimeLeft] = useState<number>(600);
+  const [timeLeft, setTimeLeft] = useState<number>(SESSION_SECONDS);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [isExpired, setIsExpired] = useState<boolean>(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const persist = useCallback(
-    (partial?: Partial<SavedSession>) => {
-      const email = partial?.currentEmail ?? currentEmail;
-      if (!email) return;
-
-      const payload: SavedSession = {
-        currentEmail: email,
-        token: partial?.token ?? token,
-        inbox: partial?.inbox ?? inbox,
-        timeLeft: partial?.timeLeft ?? timeLeft,
-        isPaused: partial?.isPaused ?? isPaused,
-        lastSaved: Date.now(),
-      };
-
-      localStorage.setItem("quantum_session", JSON.stringify(payload));
+    (next?: Partial<SavedSession>) => {
+      try {
+        const payload: SavedSession = {
+          currentEmail,
+          token,
+          inbox,
+          timeLeft,
+          isPaused,
+          lastSaved: Date.now(),
+          ...next,
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch {
+        // ignore
+      }
     },
     [currentEmail, token, inbox, timeLeft, isPaused]
   );
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem("quantum_session");
-    setInbox([]);
-    setToken("");
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {
+      // ignore
+    }
     setCurrentEmail("");
+    setToken("");
+    setInbox([]);
     setIsPaused(false);
     setTimeLeft(0);
     setIsExpired(true);
   }, []);
 
-  const handleReset = useCallback(async () => {
+  const startNewSession = useCallback(async () => {
     try {
-      localStorage.removeItem("quantum_session");
-
-      setInbox([]);
-      setToken("");
-      setCurrentEmail("");
-      setIsPaused(false);
-      setTimeLeft(600);
-      setIsExpired(false);
-
       const s = await createSession();
 
       setCurrentEmail(s.address);
       setToken(s.token);
       setInbox([]);
-      setTimeLeft(600);
+      setTimeLeft(SESSION_SECONDS);
       setIsPaused(false);
       setIsExpired(false);
 
@@ -83,98 +73,92 @@ export const useMailSession = () => {
         currentEmail: s.address,
         token: s.token,
         inbox: [],
-        timeLeft: 600,
+        timeLeft: SESSION_SECONDS,
         isPaused: false,
+        lastSaved: Date.now(),
       });
     } catch (e) {
-      console.error("RESET ERROR:", e);
-      // si falla crear sesión, al menos no crashees
+      console.error("CREATE SESSION ERROR:", e);
+      // si falla, deja en estado expirado para obligar NEW cuando vuelva a haber backend
       clearSession();
     }
   }, [persist, clearSession]);
 
-  // INIT
+  // ✅ Init: intenta restaurar. Si estaba expirada -> exige NEW.
   useEffect(() => {
-    const saved = localStorage.getItem("quantum_session");
-
-    if (saved) {
-      try {
-        const parsed: SavedSession = JSON.parse(saved);
-        const elapsed = Math.floor((Date.now() - (parsed.lastSaved || Date.now())) / 1000);
-        const newTime = parsed.isPaused ? parsed.timeLeft : parsed.timeLeft - elapsed;
-
-        if (newTime <= 0) {
-          clearSession();
-          return;
-        }
-
-        setCurrentEmail(parsed.currentEmail || "");
-        setToken(parsed.token || "");
-        setInbox(parsed.inbox || []);
-        setTimeLeft(newTime);
-        setIsPaused(!!parsed.isPaused);
-        setIsExpired(false);
-        return;
-      } catch (e) {
-        console.error("SESSION PARSE ERROR:", e);
-        localStorage.removeItem("quantum_session");
-      }
+    let savedRaw: string | null = null;
+    try {
+      savedRaw = localStorage.getItem(STORAGE_KEY);
+    } catch {
+      savedRaw = null;
     }
 
-    // no saved -> create automatically
-    (async () => {
-      try {
-        const s = await createSession();
-        setCurrentEmail(s.address);
-        setToken(s.token);
-        setInbox([]);
-        setTimeLeft(600);
-        setIsPaused(false);
-        setIsExpired(false);
+    if (!savedRaw) {
+      // primera visita -> crea una nueva automáticamente (como pediste)
+      startNewSession();
+      return;
+    }
 
-        persist({
-          currentEmail: s.address,
-          token: s.token,
-          inbox: [],
-          timeLeft: 600,
-          isPaused: false,
-        });
-      } catch (e) {
-        console.error("INIT CREATE SESSION ERROR:", e);
+    try {
+      const parsed = JSON.parse(savedRaw) as SavedSession;
+
+      const savedEmail = parsed.currentEmail || "";
+      const savedToken = parsed.token || "";
+      const savedInbox = parsed.inbox || [];
+      const savedTime = typeof parsed.timeLeft === "number" ? parsed.timeLeft : SESSION_SECONDS;
+      const savedPaused = !!parsed.isPaused;
+      const savedAt = typeof parsed.lastSaved === "number" ? parsed.lastSaved : Date.now();
+
+      // calcula tiempo restante real si no estaba pausado
+      const elapsed = Math.floor((Date.now() - savedAt) / 1000);
+      const computed = savedPaused ? savedTime : savedTime - elapsed;
+
+      if (!savedEmail || !savedToken || computed <= 0) {
+        // estaba muerto -> NO creamos nuevo automático, exigimos NEW
         clearSession();
+        return;
       }
-    })();
-  }, [persist, clearSession]);
 
-  // PERSIST
+      setCurrentEmail(savedEmail);
+      setToken(savedToken);
+      setInbox(savedInbox);
+      setTimeLeft(computed);
+      setIsPaused(savedPaused);
+      setIsExpired(false);
+    } catch (e) {
+      console.error("SESSION PARSE ERROR:", e);
+      clearSession();
+    }
+  }, [startNewSession, clearSession]);
+
+  // ✅ Persist (solo si hay sesión viva)
   useEffect(() => {
-    if (isExpired) return;
-    if (!currentEmail) return;
+    if (!currentEmail || isExpired) return;
     persist();
   }, [currentEmail, token, inbox, timeLeft, isPaused, isExpired, persist]);
 
-  // TIMER
+  // ✅ Timer (sin llamar reset dentro del setState)
   useEffect(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (isExpired) return;
-    if (isPaused || !currentEmail || timeLeft <= 0) return;
+    if (isExpired || isPaused || !currentEmail || timeLeft <= 0) return;
 
     timerRef.current = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          clearSession();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPaused, currentEmail, timeLeft, isExpired, clearSession]);
+  }, [isExpired, isPaused, currentEmail, timeLeft]);
 
-  // POLLING
+  // ✅ Cuando llegue a 0 => expira y obliga NEW
+  useEffect(() => {
+    if (!isExpired && currentEmail && timeLeft === 0) {
+      clearSession();
+    }
+  }, [timeLeft, isExpired, currentEmail, clearSession]);
+
+  // ✅ Polling Inbox REAL (solo si sesión viva)
   useEffect(() => {
     if (!token || isPaused || isExpired) return;
 
@@ -185,33 +169,21 @@ export const useMailSession = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        if (!res.ok) {
-          // evita crashear si hay 401/500
-          console.warn("INBOX HTTP ERROR:", res.status);
-          return;
-        }
-
-        let data: any = null;
-        try {
-          data = await res.json();
-        } catch (e) {
-          console.warn("INBOX JSON PARSE ERROR:", e);
-          return;
-        }
-
+        const data = await res.json();
         const list = data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
-        if (!Array.isArray(list)) return;
 
-        const mapped = list.map((m: any) => ({
-          id: m.id ?? m["@id"] ?? safeId(),
-          sender: m?.from?.address ?? "unknown",
-          subject: m?.subject ?? "(no subject)",
-          preview: m?.intro ?? "",
-          body: m?.intro ?? "",
-          timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
-        }));
+        if (Array.isArray(list)) {
+          const mapped = list.map((m: any) => ({
+            id: m.id ?? m["@id"] ?? crypto.randomUUID(),
+            sender: m?.from?.address ?? "unknown",
+            subject: m?.subject ?? "(no subject)",
+            preview: m?.intro ?? "",
+            body: m?.intro ?? "",
+            timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+          }));
 
-        setInbox(mapped);
+          setInbox(mapped);
+        }
       } catch (err) {
         console.error("INBOX ERROR:", err);
       }
@@ -224,12 +196,45 @@ export const useMailSession = () => {
 
   const togglePause = () => setIsPaused((p) => !p);
 
+  // ✅ NEW button (crea sesión real)
+  const handleReset = useCallback(async () => {
+    try {
+      // limpia primero
+      try {
+        localStorage.removeItem(STORAGE_KEY);
+      } catch {
+        // ignore
+      }
+      setInbox([]);
+      setToken("");
+      setIsPaused(false);
+      setTimeLeft(SESSION_SECONDS);
+      setIsExpired(false);
+
+      const s = await createSession();
+      setCurrentEmail(s.address);
+      setToken(s.token);
+
+      persist({
+        currentEmail: s.address,
+        token: s.token,
+        inbox: [],
+        timeLeft: SESSION_SECONDS,
+        isPaused: false,
+        lastSaved: Date.now(),
+      });
+    } catch (e) {
+      console.error("RESET ERROR:", e);
+      clearSession();
+    }
+  }, [persist, clearSession]);
+
   const setRealSession = useCallback(
     (session: { address: string; token: string }) => {
       setCurrentEmail(session.address);
       setToken(session.token);
       setInbox([]);
-      setTimeLeft(600);
+      setTimeLeft(SESSION_SECONDS);
       setIsPaused(false);
       setIsExpired(false);
 
@@ -237,8 +242,9 @@ export const useMailSession = () => {
         currentEmail: session.address,
         token: session.token,
         inbox: [],
-        timeLeft: 600,
+        timeLeft: SESSION_SECONDS,
         isPaused: false,
+        lastSaved: Date.now(),
       });
     },
     [persist]
