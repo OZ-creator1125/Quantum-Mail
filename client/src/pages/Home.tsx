@@ -13,11 +13,10 @@ import {
   ChevronLeft,
   ShieldAlert,
   RotateCcw,
-  TriangleAlert,
+  AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { createSession } from "@/lib/api";
 
 export default function Home() {
   const {
@@ -25,11 +24,9 @@ export default function Home() {
     inbox,
     timeLeft,
     isPaused,
-    togglePause,
-    setRealSession,
-    handleReset,
-    isExpiring,
     isExpired,
+    togglePause,
+    handleReset, // NEW button
   } = useMailSession();
 
   const { toast } = useToast();
@@ -43,50 +40,36 @@ export default function Home() {
     return `${m}:${s}`;
   };
 
-  const timeText = useMemo(() => formatTime(Math.max(0, timeLeft)), [timeLeft]);
-
-  const handleRealNew = async () => {
-    try {
-      // si estás usando tu backend real:
-      const s = await createSession();
-
-      // copy automático
-      await navigator.clipboard.writeText(s.address);
-
-      setShowCopiedBanner(true);
-      setTimeout(() => setShowCopiedBanner(false), 2500);
-
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-
-      toast({
-        title: "✅ Email copied to clipboard",
-        description: "Paste anywhere (Ctrl+V / Cmd+V)",
-        className: "bg-primary text-primary-foreground font-display",
-      });
-
-      setRealSession({ address: s.address, token: s.token });
-      setSelectedEmail(null);
-    } catch (err: any) {
-      console.error(err);
-      toast({
-        title: "❌ Error creating new session",
-        description: "Check console (F12) and Railway logs",
-        className: "bg-destructive text-destructive-foreground font-display",
-      });
-    }
-  };
+  const timeText = useMemo(() => formatTime(timeLeft), [timeLeft]);
+  const isLastMinute = timeLeft > 0 && timeLeft <= 60 && !isExpired;
 
   const handleCopy = async () => {
-    if (!currentEmail) return;
+    if (!currentEmail || isExpired) return;
+
     await navigator.clipboard.writeText(currentEmail);
 
     setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
+    setShowCopiedBanner(true);
 
     toast({
       title: "✅ Email copied to clipboard",
       description: "Paste anywhere (Ctrl+V / Cmd+V)",
+      className: "bg-primary text-primary-foreground font-display",
+    });
+
+    setTimeout(() => setCopied(false), 1400);
+    setTimeout(() => setShowCopiedBanner(false), 2500);
+  };
+
+  const handleNew = async () => {
+    await handleReset();
+    setSelectedEmail(null);
+
+    // Optional: auto-copy new email is NOT guaranteed immediately (async state),
+    // so we only show a toast. User can click COPY.
+    toast({
+      title: "✅ New session started",
+      description: "Your new inbox is ready.",
       className: "bg-primary text-primary-foreground font-display",
     });
   };
@@ -95,7 +78,9 @@ export default function Home() {
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
         {/* Banner */}
-        {showCopiedBanner && <div className="qm-banner">NEW EMAIL GENERATED &amp; COPIED</div>}
+        {showCopiedBanner && (
+          <div className="qm-banner">EMAIL COPIED</div>
+        )}
 
         {/* Header */}
         <header className="qm-header">
@@ -103,7 +88,7 @@ export default function Home() {
           <h1 className="qm-brand">QUANTUM_MAIL</h1>
         </header>
 
-        {/* Grid (SIN ARCHIVES) */}
+        {/* Grid (NO ARCHIVES) */}
         <div className="qm-grid qm-grid--noarchives">
           {/* Panel 1: Current Identity */}
           <section className="qm-panel qm-panel--identity">
@@ -113,14 +98,18 @@ export default function Home() {
 
               <div className="qm-identity-row">
                 <div className="qm-email">
-                  <span className="qm-email__text">{currentEmail || "GENERATING..."}</span>
+                  <span className="qm-email__text">
+                    {isExpired
+                      ? "SESSION EXPIRED — PRESS NEW"
+                      : currentEmail || "GENERATING..."}
+                  </span>
                 </div>
 
                 <Button
                   onClick={handleCopy}
                   className="qm-btn qm-btn--cyan"
+                  disabled={!currentEmail || isExpired}
                   data-testid="button-copy"
-                  disabled={!currentEmail}
                 >
                   {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
                   <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
@@ -131,35 +120,37 @@ export default function Home() {
 
           {/* Panel 2: Timer */}
           <section className="qm-panel qm-panel--timer">
-            <div className={`qm-accent ${isExpiring ? "qm-accent--cyan" : "qm-accent--purple"}`} />
+            <div className="qm-accent qm-accent--purple" />
             <div className="qm-panel__inner qm-panel__inner--center">
               <div className="qm-kicker">TIME REMAINING</div>
 
-              <div className={`qm-timer ${isExpiring ? "qm-timer--danger" : ""}`}>{timeText}</div>
+              <div className={`qm-timer ${isLastMinute ? "qm-timer--danger" : ""}`}>
+                {timeText}
+              </div>
 
-              {/* Warning último minuto */}
-              {isExpiring && !isExpired && (
+              {/* Last-minute warning */}
+              {isLastMinute && (
                 <div className="qm-expire-warning">
-                  <TriangleAlert className="qm-expire-warning__ico" />
-                  ALL MESSAGES WILL BE DELETED IN LESS THAN 1 MINUTE
+                  <AlertTriangle className="qm-expire-warning__ico" />
+                  SESSION WILL EXPIRE IN UNDER 60 SECONDS
                 </div>
               )}
 
-              {/* Expirado */}
+              {/* Expired state note */}
               {isExpired && (
-                <div className="qm-expire-warning">
-                  <TriangleAlert className="qm-expire-warning__ico" />
-                  SESSION EXPIRED — CLICK NEW TO GENERATE A NEW EMAIL
+                <div className="qm-expire-warning" style={{ marginTop: 12 }}>
+                  <AlertTriangle className="qm-expire-warning__ico" />
+                  SESSION EXPIRED — PRESS NEW TO GENERATE A NEW EMAIL
                 </div>
               )}
 
-              <div className="qm-timer-actions">
+              <div className="qm-timer-actions" style={{ marginTop: 12 }}>
                 <Button
                   variant="outline"
                   onClick={togglePause}
                   className="qm-btn qm-btn--purple"
+                  disabled={isExpired || !currentEmail}
                   data-testid="button-pause"
-                  disabled={isExpired}
                 >
                   {isPaused ? <Play className="qm-ico" /> : <Pause className="qm-ico" />}
                   <span className="qm-btn__text">{isPaused ? "RESUME" : "PAUSE"}</span>
@@ -167,7 +158,7 @@ export default function Home() {
 
                 <Button
                   variant="outline"
-                  onClick={handleRealNew}
+                  onClick={handleNew}
                   className="qm-btn qm-btn--cyan"
                   data-testid="button-reset"
                 >
@@ -268,14 +259,68 @@ export default function Home() {
           </section>
         </div>
 
-        {/* About */}
+        {/* About section (premium text) */}
         <section className="qm-about">
-          <h3 className="qm-about__title">WHAT IS QUANTUM MAIL?</h3>
+          <h3 className="qm-about__title">Quantum Mail</h3>
           <p className="qm-about__text">
-            Quantum Mail is a secure 10-minute temporary email. Use it to sign up on websites,
-            receive verification codes, and protect your real inbox. When the timer expires, the
-            address and all messages are permanently deleted.
+            Quantum Mail is a privacy-focused temporary email service that instantly generates a disposable inbox. It
+            allows you to receive verification emails, activation links, or one-time messages without exposing your real
+            email address. The inbox is automatically deleted when the timer expires, keeping your identity private and
+            your personal inbox free from spam.
           </p>
+
+          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
+            Why would you use Quantum Mail?
+          </h3>
+          <p className="qm-about__text">
+            Many websites require an email address to complete registration, verify an account, or access certain
+            features. Using your real email can result in spam, marketing lists, cross-platform tracking, and increased
+            security risks. Quantum Mail solves this by providing a temporary email address that self-destructs
+            automatically.
+          </p>
+
+          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
+            How it works
+          </h3>
+          <p className="qm-about__text">
+            When you open the page, a new temporary email address is generated and the timer starts. When 60 seconds
+            remain, you’ll see a warning. When the countdown reaches zero, the email address and all messages are deleted
+            permanently. Press <strong>NEW</strong> to generate a fresh inbox.
+          </p>
+
+          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
+            Key Features
+          </h3>
+          <p className="qm-about__text">
+            Instant temporary email generation · No signup required · Anonymous inbox · Automatic expiration & cleanup ·
+            Spam and tracking protection · Clean, fast, lightweight interface
+          </p>
+
+          <h3 className="qm-about__title" style={{ marginTop: 18 }}>
+            FAQ
+          </h3>
+          <p className="qm-about__text">
+            <strong>Does Quantum Mail store my emails permanently?</strong> No. Messages are intended to be temporary and
+            are deleted when the timer expires.
+            <br />
+            <strong>Can I extend the time?</strong> Not in the standard flow. When the timer ends, the inbox is wiped and
+            you generate a new one with NEW.
+            <br />
+            <strong>Can I send emails?</strong> Quantum Mail is designed for receiving emails only.
+            <br />
+            <strong>Is it safe for important accounts?</strong> No. Don’t use temporary inboxes for banking, password
+            recovery, or critical services.
+          </p>
+
+          <div style={{ marginTop: 18, opacity: 0.75 }}>
+            <p className="qm-about__text" style={{ marginBottom: 6 }}>
+              © 2026 <strong>Quantum Mail</strong> — Privacy-first temporary email sessions · Auto-delete by timer · No
+              signup required
+            </p>
+            <p className="qm-about__text" style={{ fontSize: 13 }}>
+              Temporary Email · Disposable Email · Burner Email · Spam Protection · Use Cases · FAQ · Privacy Policy
+            </p>
+          </div>
         </section>
       </div>
     </div>
