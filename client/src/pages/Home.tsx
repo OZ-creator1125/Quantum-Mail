@@ -13,10 +13,13 @@ import {
   ChevronLeft,
   ShieldAlert,
   RotateCcw,
-  AlertTriangle,
+  TriangleAlert,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import { createSession } from "@/lib/api";
+
+const SHOW_ARCHIVES = false; // ✅ ARCHIVES OFF (sin huecos)
 
 export default function Home() {
   const {
@@ -26,7 +29,8 @@ export default function Home() {
     isPaused,
     isExpired,
     togglePause,
-    handleReset, // NEW button
+    setRealSession,
+    handleReset,
   } = useMailSession();
 
   const { toast } = useToast();
@@ -35,52 +39,70 @@ export default function Home() {
   const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
+    const safe = Math.max(0, seconds);
+    const m = Math.floor(safe / 60).toString().padStart(2, "0");
+    const s = (safe % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
   const timeText = useMemo(() => formatTime(timeLeft), [timeLeft]);
-  const isLastMinute = timeLeft > 0 && timeLeft <= 60 && !isExpired;
+  const isLastMinute = !isExpired && timeLeft > 0 && timeLeft <= 60;
+
+  const handleRealNew = async () => {
+    try {
+      // crea sesión REAL
+      const s = await createSession();
+
+      // ❌ NO auto-copy aquí (evita prompts). Solo banner + toast.
+      setShowCopiedBanner(true);
+      setTimeout(() => setShowCopiedBanner(false), 2500);
+
+      toast({
+        title: "✅ New session ready",
+        description: "Tap COPY to copy your new email",
+        className: "bg-primary text-primary-foreground font-display",
+      });
+
+      setRealSession({ address: s.address, token: s.token });
+      setSelectedEmail(null);
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: "❌ Error creating new session",
+        description: "Check console (F12) and Railway logs",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
+    }
+  };
 
   const handleCopy = async () => {
     if (!currentEmail || isExpired) return;
 
-    await navigator.clipboard.writeText(currentEmail);
+    try {
+      await navigator.clipboard.writeText(currentEmail);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
 
-    setCopied(true);
-    setShowCopiedBanner(true);
-
-    toast({
-      title: "✅ Email copied to clipboard",
-      description: "Paste anywhere (Ctrl+V / Cmd+V)",
-      className: "bg-primary text-primary-foreground font-display",
-    });
-
-    setTimeout(() => setCopied(false), 1400);
-    setTimeout(() => setShowCopiedBanner(false), 2500);
-  };
-
-  const handleNew = async () => {
-    await handleReset();
-    setSelectedEmail(null);
-
-    // Optional: auto-copy new email is NOT guaranteed immediately (async state),
-    // so we only show a toast. User can click COPY.
-    toast({
-      title: "✅ New session started",
-      description: "Your new inbox is ready.",
-      className: "bg-primary text-primary-foreground font-display",
-    });
+      toast({
+        title: "✅ Email copied to clipboard",
+        description: "Paste anywhere (Ctrl+V / Cmd+V)",
+        className: "bg-primary text-primary-foreground font-display",
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        title: "⚠️ Copy blocked by browser",
+        description: "Try again (some browsers require a direct click)",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
+    }
   };
 
   return (
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
         {/* Banner */}
-        {showCopiedBanner && (
-          <div className="qm-banner">EMAIL COPIED</div>
-        )}
+        {showCopiedBanner && <div className="qm-banner">NEW EMAIL GENERATED</div>}
 
         {/* Header */}
         <header className="qm-header">
@@ -88,8 +110,12 @@ export default function Home() {
           <h1 className="qm-brand">QUANTUM_MAIL</h1>
         </header>
 
-        {/* Grid (NO ARCHIVES) */}
-        <div className="qm-grid qm-grid--noarchives">
+        {/* Grid */}
+        <div
+          className={`qm-grid ${
+            SHOW_ARCHIVES ? "qm-grid--archives" : "qm-grid--noarchives"
+          }`}
+        >
           {/* Panel 1: Current Identity */}
           <section className="qm-panel qm-panel--identity">
             <div className="qm-accent qm-accent--cyan" />
@@ -99,22 +125,29 @@ export default function Home() {
               <div className="qm-identity-row">
                 <div className="qm-email">
                   <span className="qm-email__text">
-                    {isExpired
-                      ? "SESSION EXPIRED — PRESS NEW"
-                      : currentEmail || "GENERATING..."}
+                    {isExpired ? "SESSION EXPIRED" : currentEmail || "GENERATING..."}
                   </span>
                 </div>
 
                 <Button
                   onClick={handleCopy}
-                  className="qm-btn qm-btn--cyan"
                   disabled={!currentEmail || isExpired}
+                  className="qm-btn qm-btn--cyan"
                   data-testid="button-copy"
                 >
                   {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
-                  <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
+                  <span className="qm-btn__text">
+                    {copied ? "COPIED" : "COPY"}
+                  </span>
                 </Button>
               </div>
+
+              {/* (opcional) mini hint debajo del email */}
+              {!isExpired && (
+                <div style={{ marginTop: 10, color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
+                  10-minute secure inbox. Disposable. No sign-up.
+                </div>
+              )}
             </div>
           </section>
 
@@ -125,40 +158,34 @@ export default function Home() {
               <div className="qm-kicker">TIME REMAINING</div>
 
               <div className={`qm-timer ${isLastMinute ? "qm-timer--danger" : ""}`}>
-                {timeText}
+                {isExpired ? "00:00" : timeText}
               </div>
 
               {/* Last-minute warning */}
               {isLastMinute && (
                 <div className="qm-expire-warning">
-                  <AlertTriangle className="qm-expire-warning__ico" />
-                  SESSION WILL EXPIRE IN UNDER 60 SECONDS
+                  <TriangleAlert className="qm-expire-warning__ico" />
+                  LAST MINUTE — EVERYTHING WILL BE DELETED
                 </div>
               )}
 
-              {/* Expired state note */}
-              {isExpired && (
-                <div className="qm-expire-warning" style={{ marginTop: 12 }}>
-                  <AlertTriangle className="qm-expire-warning__ico" />
-                  SESSION EXPIRED — PRESS NEW TO GENERATE A NEW EMAIL
-                </div>
-              )}
-
-              <div className="qm-timer-actions" style={{ marginTop: 12 }}>
+              <div className="qm-timer-actions" style={{ marginTop: 14 }}>
                 <Button
                   variant="outline"
                   onClick={togglePause}
-                  className="qm-btn qm-btn--purple"
                   disabled={isExpired || !currentEmail}
+                  className="qm-btn qm-btn--purple"
                   data-testid="button-pause"
                 >
                   {isPaused ? <Play className="qm-ico" /> : <Pause className="qm-ico" />}
-                  <span className="qm-btn__text">{isPaused ? "RESUME" : "PAUSE"}</span>
+                  <span className="qm-btn__text">
+                    {isPaused ? "RESUME" : "PAUSE"}
+                  </span>
                 </Button>
 
                 <Button
                   variant="outline"
-                  onClick={handleNew}
+                  onClick={handleRealNew}
                   className="qm-btn qm-btn--cyan"
                   data-testid="button-reset"
                 >
@@ -166,6 +193,13 @@ export default function Home() {
                   <span className="qm-btn__text">NEW</span>
                 </Button>
               </div>
+
+              {/* Expired hint */}
+              {isExpired && (
+                <div style={{ marginTop: 12, color: "rgba(255,255,255,0.60)", fontSize: 13 }}>
+                  Session expired. Click <b>NEW</b> to generate a fresh email.
+                </div>
+              )}
             </div>
           </section>
 
@@ -175,7 +209,7 @@ export default function Home() {
               <div className="qm-panel__title">
                 <InboxIcon className="qm-title-ico qm-title-ico--cyan" />
                 <span className="qm-title-text">SECURE_INBOX</span>
-                <span className="qm-title-count">({inbox.length})</span>
+                <span className="qm-title-count">({isExpired ? 0 : inbox.length})</span>
               </div>
 
               {isPaused && !isExpired && <div className="qm-paused">RECEIVING PAUSED</div>}
@@ -185,7 +219,7 @@ export default function Home() {
             <div className="qm-panel__body">
               <ScrollArea className="h-full w-full">
                 <AnimatePresence mode="wait">
-                  {selectedEmail ? (
+                  {selectedEmail && !isExpired ? (
                     <motion.div
                       key="detail"
                       initial={{ opacity: 0, x: 16 }}
@@ -219,7 +253,7 @@ export default function Home() {
                       {isExpired ? (
                         <div className="qm-empty">
                           <RotateCcw className="qm-empty__spin" />
-                          <div className="qm-empty__text">SESSION EXPIRED — PRESS NEW</div>
+                          <div className="qm-empty__text">SESSION EXPIRED — CLICK NEW</div>
                         </div>
                       ) : inbox.length === 0 ? (
                         <div className="qm-empty">
@@ -259,68 +293,18 @@ export default function Home() {
           </section>
         </div>
 
-        {/* About section (premium text) */}
+        {/* About (texto premium, mismo estilo) */}
         <section className="qm-about">
-          <h3 className="qm-about__title">Quantum Mail</h3>
+          <h2 className="qm-about__title">WHAT IS QUANTUM MAIL?</h2>
           <p className="qm-about__text">
-            Quantum Mail is a privacy-focused temporary email service that instantly generates a disposable inbox. It
-            allows you to receive verification emails, activation links, or one-time messages without exposing your real
-            email address. The inbox is automatically deleted when the timer expires, keeping your identity private and
-            your personal inbox free from spam.
+            Quantum Mail is a free, disposable email inbox that lasts 10 minutes. Use it to
+            sign up for services, receive verification codes, and protect your real inbox from spam.
+            When the timer ends, the address and messages are deleted automatically.
           </p>
-
-          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
-            Why would you use Quantum Mail?
-          </h3>
-          <p className="qm-about__text">
-            Many websites require an email address to complete registration, verify an account, or access certain
-            features. Using your real email can result in spam, marketing lists, cross-platform tracking, and increased
-            security risks. Quantum Mail solves this by providing a temporary email address that self-destructs
-            automatically.
+          <p className="qm-about__text" style={{ marginTop: 10 }}>
+            <b>1)</b> Privacy-first: no accounts, no setup. <b>2)</b> Fast: generate a new inbox instantly.
+            <b>3)</b> Clean: your session disappears when time runs out.
           </p>
-
-          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
-            How it works
-          </h3>
-          <p className="qm-about__text">
-            When you open the page, a new temporary email address is generated and the timer starts. When 60 seconds
-            remain, you’ll see a warning. When the countdown reaches zero, the email address and all messages are deleted
-            permanently. Press <strong>NEW</strong> to generate a fresh inbox.
-          </p>
-
-          <h3 className="qm-about__title" style={{ marginTop: 14 }}>
-            Key Features
-          </h3>
-          <p className="qm-about__text">
-            Instant temporary email generation · No signup required · Anonymous inbox · Automatic expiration & cleanup ·
-            Spam and tracking protection · Clean, fast, lightweight interface
-          </p>
-
-          <h3 className="qm-about__title" style={{ marginTop: 18 }}>
-            FAQ
-          </h3>
-          <p className="qm-about__text">
-            <strong>Does Quantum Mail store my emails permanently?</strong> No. Messages are intended to be temporary and
-            are deleted when the timer expires.
-            <br />
-            <strong>Can I extend the time?</strong> Not in the standard flow. When the timer ends, the inbox is wiped and
-            you generate a new one with NEW.
-            <br />
-            <strong>Can I send emails?</strong> Quantum Mail is designed for receiving emails only.
-            <br />
-            <strong>Is it safe for important accounts?</strong> No. Don’t use temporary inboxes for banking, password
-            recovery, or critical services.
-          </p>
-
-          <div style={{ marginTop: 18, opacity: 0.75 }}>
-            <p className="qm-about__text" style={{ marginBottom: 6 }}>
-              © 2026 <strong>Quantum Mail</strong> — Privacy-first temporary email sessions · Auto-delete by timer · No
-              signup required
-            </p>
-            <p className="qm-about__text" style={{ fontSize: 13 }}>
-              Temporary Email · Disposable Email · Burner Email · Spam Protection · Use Cases · FAQ · Privacy Policy
-            </p>
-          </div>
         </section>
       </div>
     </div>
