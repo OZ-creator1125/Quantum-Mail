@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMailSession } from "@/hooks/use-mail-session";
 import { EmailMessage } from "@/lib/mock-api";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,6 @@ import {
   Check,
   ChevronLeft,
   ShieldAlert,
-  Sparkles,
   TriangleAlert,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,15 +26,12 @@ export default function Home() {
 
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-  const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
-  // UI FX
-  const [justGenerated, setJustGenerated] = useState(false);
-  const [justRotated, setJustRotated] = useState(false);
+  // ✅ when timer hits 0, require NEW
+  const [expired, setExpired] = useState(false);
 
-  // Auto-start/rotate guards
+  // ensure we auto-start only once
   const didAutoStart = useRef(false);
-  const rotating = useRef(false);
 
   const formatTime = (seconds: number) => {
     const safe = Math.max(0, seconds);
@@ -44,57 +40,64 @@ export default function Home() {
     return `${m}:${s}`;
   };
 
-  const isLastMinute = timeLeft <= 60;
-  const isCritical = timeLeft <= 10;
+  const isLastMinute = timeLeft <= 60 && timeLeft > 0;
 
-  const timerTone = useMemo(() => {
-    if (timeLeft <= 10) return "critical";
-    if (timeLeft <= 60) return "warning";
-    return "normal";
-  }, [timeLeft]);
+  // ✅ Auto-start: create session on first load (NO clipboard)
+  useEffect(() => {
+    if (didAutoStart.current) return;
+    didAutoStart.current = true;
 
-  const pulseGenerate = () => {
-    setJustGenerated(true);
-    window.setTimeout(() => setJustGenerated(false), 900);
-  };
+    (async () => {
+      try {
+        const s = await createSession();
+        setRealSession({ address: s.address, token: s.token });
+        setSelectedEmail(null);
+        setExpired(false);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "❌ Error creating session",
+          description: "Try again with NEW",
+          className: "bg-destructive text-destructive-foreground font-display",
+        });
+        setExpired(true);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  const pulseRotate = () => {
-    setJustRotated(true);
-    window.setTimeout(() => setJustRotated(false), 900);
-  };
+  // ✅ When time ends, lock and require NEW (NO auto-regenerate, no clipboard popups)
+  useEffect(() => {
+    if (isPaused) return;
+    if (timeLeft > 0) return;
+    // timeLeft === 0
+    if (!expired) {
+      setExpired(true);
+      setSelectedEmail(null);
+      toast({
+        title: "⏳ Session expired",
+        description: "Click NEW to generate a fresh email.",
+        className: "bg-primary text-primary-foreground font-display",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, isPaused]);
 
-  const handleRealNew = async (opts?: { silent?: boolean }) => {
+  // ✅ NEW: generate fresh email (NO clipboard, avoids permission popup)
+  const handleNew = async () => {
     try {
       const s = await createSession();
-
-      // copy automatically
-      await navigator.clipboard.writeText(s.address);
-
-      // change session + clear selected email (kills inbox view)
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
+      setExpired(false);
 
-      // UI: banner
-      setShowCopiedBanner(true);
-      setTimeout(() => setShowCopiedBanner(false), 2200);
-
-      // UI: copy state
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-
-      // UI: glow
-      pulseGenerate();
-
-      if (!opts?.silent) {
-        toast({
-          title: "✅ Email copied to clipboard",
-          description: "Paste anywhere (Ctrl+V / Cmd+V)",
-          className: "bg-primary text-primary-foreground font-display",
-        });
-      }
+      toast({
+        title: "✅ New email generated",
+        description: "Use COPY to copy it.",
+        className: "bg-primary text-primary-foreground font-display",
+      });
     } catch (err: any) {
       console.error(err);
-
       toast({
         title: "❌ Error creating new session",
         description: "Check console (F12) and Railway logs",
@@ -103,272 +106,266 @@ export default function Home() {
     }
   };
 
+  // ✅ COPY: only copy on user click → no popup on load
   const handleCopy = async () => {
     if (!currentEmail) return;
+    try {
+      await navigator.clipboard.writeText(currentEmail);
+      setCopied(true);
 
-    await navigator.clipboard.writeText(currentEmail);
+      toast({
+        title: "✅ Email copied to clipboard",
+        description: "Paste anywhere (Ctrl+V / Cmd+V)",
+        className: "bg-primary text-primary-foreground font-display",
+      });
 
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1200);
-
-    toast({
-      title: "✅ Email copied to clipboard",
-      description: "Paste anywhere (Ctrl+V / Cmd+V)",
-      className: "bg-primary text-primary-foreground font-display",
-    });
+      setTimeout(() => setCopied(false), 1400);
+    } catch (e) {
+      toast({
+        title: "⚠️ Clipboard blocked",
+        description: "Browser blocked clipboard. Copy manually.",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
+    }
   };
 
-  // ✅ Auto-generate on first load
-  useEffect(() => {
-    if (didAutoStart.current) return;
-    didAutoStart.current = true;
-
-    // create first identity automatically
-    handleRealNew({ silent: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // ✅ Auto-rotate when time hits 0
-  useEffect(() => {
-    if (isPaused) return;
-    if (timeLeft > 0) {
-      rotating.current = false;
-      return;
-    }
-
-    if (rotating.current) return;
-    rotating.current = true;
-
-    // Warning pulse
-    pulseRotate();
-
-    // Generate next email session
-    handleRealNew({ silent: true });
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeLeft, isPaused]);
-
   return (
-    <div className="qm-shell min-h-screen">
-      <div className="qm-wrap">
-        {/* Banner */}
-        <AnimatePresence>
-          {showCopiedBanner && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="qm-banner"
+    <div className="min-h-screen p-4 md:p-8 flex flex-col max-w-7xl mx-auto">
+      {/* Header */}
+      <header className="flex items-center gap-3 mb-8">
+        <ShieldAlert className="w-8 h-8 text-primary" />
+        <h1 className="text-2xl font-bold tracking-wider text-primary">
+          QUANTUM_MAIL
+        </h1>
+      </header>
+
+      {/* Top Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Identity */}
+        <div className="lg:col-span-2 glass-panel p-6 rounded-xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+
+          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
+            Current Identity
+          </h2>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex-1 w-full bg-black/50 border border-primary/20 rounded-lg p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
+              {currentEmail || "GENERATING..."}
+            </div>
+
+            <Button
+              size="lg"
+              className="w-full sm:w-auto gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
+              onClick={handleCopy}
+              disabled={!currentEmail || expired}
+              data-testid="button-copy"
             >
-              NEW EMAIL GENERATED & COPIED
-            </motion.div>
-          )}
-        </AnimatePresence>
+              {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+              {copied ? "COPIED" : "COPY"}
+            </Button>
+          </div>
 
-        {/* Header */}
-        <header className="qm-header">
-          <ShieldAlert className="qm-logo" />
-          <h1 className="qm-brand">QUANTUM_MAIL</h1>
-        </header>
-
-        {/* GRID */}
-        <div className="qm-grid qm-grid--noarchives">
-          {/* CURRENT IDENTITY */}
-          <section
-            className={[
-              "qm-panel qm-panel--identity",
-              justGenerated ? "qm-glow-gen" : "",
-              justRotated ? "qm-glow-rotate" : "",
-            ].join(" ")}
-          >
-            <div className="qm-accent qm-accent--cyan" />
-
-            <div className="qm-panel__inner">
-              <div className="qm-kicker">CURRENT IDENTITY</div>
-
-              <div className="qm-identity-row">
-                <div className="qm-email">
-                  <span className="qm-email__text">
-                    {currentEmail || "GENERATING..."}
-                  </span>
-                </div>
-
-                <Button
-                  onClick={handleCopy}
-                  className="qm-btn qm-btn--cyan"
-                  data-testid="button-copy"
-                >
-                  {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
-                  <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
-                </Button>
-              </div>
-
-              {/* Tiny helper line */}
-              <div className="qm-hint">
-                <Sparkles className="qm-hint__ico" />
-                Auto-copied on NEW. Paste anywhere instantly.
-              </div>
-            </div>
-          </section>
-
-          {/* TIMER */}
-          <section
-            className={[
-              "qm-panel qm-panel--timer",
-              timerTone === "warning" ? "qm-timer-warning" : "",
-              timerTone === "critical" ? "qm-timer-critical" : "",
-            ].join(" ")}
-          >
-            <div className="qm-accent qm-accent--purple" />
-
-            <div className="qm-panel__inner qm-panel__inner--center">
-              <div className="qm-kicker">TIME REMAINING</div>
-
-              <div className="qm-timer-wrap">
-                <div
-                  className={[
-                    "qm-timer",
-                    isLastMinute ? "qm-timer--warn" : "",
-                    isCritical ? "qm-timer--critical" : "",
-                  ].join(" ")}
-                >
-                  {formatTime(timeLeft)}
-                </div>
-
-                {isLastMinute && (
-                  <div className="qm-timer-alert">
-                    <TriangleAlert className="qm-timer-alert__ico" />
-                    Last minute — everything will be wiped.
-                  </div>
-                )}
-              </div>
-
-              <div className="qm-timer-actions">
-                <Button
-                  variant="outline"
-                  onClick={togglePause}
-                  className="qm-btn qm-btn--purple"
-                  data-testid="button-pause"
-                >
-                  {isPaused ? <Play className="qm-ico" /> : <Pause className="qm-ico" />}
-                  <span className="qm-btn__text">{isPaused ? "RESUME" : "PAUSE"}</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  onClick={() => handleRealNew()}
-                  className="qm-btn qm-btn--cyan"
-                  data-testid="button-reset"
-                >
-                  <RefreshCw className="qm-ico" />
-                  <span className="qm-btn__text">NEW</span>
-                </Button>
-              </div>
-            </div>
-          </section>
-
-          {/* INBOX */}
-          <section className="qm-panel qm-panel--inbox">
-            <div className="qm-panel__top">
-              <div className="qm-panel__title">
-                <InboxIcon className="qm-title-ico qm-title-ico--cyan" />
-                <span className="qm-title-text">SECURE_INBOX</span>
-                <span className="qm-title-count">({inbox.length})</span>
-              </div>
-
-              {isPaused && <div className="qm-paused">RECEIVING PAUSED</div>}
-            </div>
-
-            <div className="qm-panel__body">
-              <ScrollArea className="h-full w-full">
-                <AnimatePresence mode="wait">
-                  {selectedEmail ? (
-                    <motion.div
-                      key="detail"
-                      initial={{ opacity: 0, x: 18 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -18 }}
-                      className="qm-detail"
-                    >
-                      <button className="qm-back" onClick={() => setSelectedEmail(null)}>
-                        <ChevronLeft className="qm-ico" />
-                        BACK TO INBOX
-                      </button>
-
-                      <div className="qm-meta">
-                        <div className="qm-meta__label">FROM</div>
-                        <div className="qm-meta__value qm-meta__value--cyan">
-                          {selectedEmail.sender}
-                        </div>
-                      </div>
-
-                      <div className="qm-meta">
-                        <div className="qm-meta__label">SUBJECT</div>
-                        <div className="qm-meta__value qm-meta__value--white">
-                          {selectedEmail.subject}
-                        </div>
-                      </div>
-
-                      <div className="qm-body">{selectedEmail.body}</div>
-                    </motion.div>
-                  ) : (
-                    <motion.div key="list" className="qm-list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                      {inbox.length === 0 ? (
-                        <div className="qm-empty">
-                          <RefreshCw className="qm-empty__spin" />
-                          <div className="qm-empty__text">AWAITING TRANSMISSIONS...</div>
-                        </div>
-                      ) : (
-                        <div className="qm-rows">
-                          {inbox.map((msg, idx) => (
-                            <motion.button
-                              key={msg.id}
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: Math.min(idx * 0.035, 0.35) }}
-                              className="qm-row"
-                              onClick={() => setSelectedEmail(msg)}
-                              data-testid={`row-email-${msg.id}`}
-                            >
-                              <div className="qm-row__top">
-                                <div className="qm-row__from">{msg.sender}</div>
-                                <div className="qm-row__time">
-                                  {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
-                                </div>
-                              </div>
-
-                              <div className="qm-row__subject">{msg.subject}</div>
-                              <div className="qm-row__preview">{msg.preview}</div>
-                            </motion.button>
-                          ))}
-                        </div>
-                      )}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </ScrollArea>
-            </div>
-          </section>
-
-          {/* ABOUT (Bottom) */}
-          <section className="qm-about">
-            <div className="qm-about__title">What is Quantum Mail?</div>
-
-            <div className="qm-about__text">
-              Quantum Mail generates a disposable email identity that lasts{" "}
-              <span className="qm-about__highlight">10 minutes</span>.
-              Use it to sign up, verify accounts, or protect your real inbox from spam.
-              When the timer ends, the inbox and identity are{" "}
-              <span className="qm-about__highlight">automatically wiped</span> and replaced.
-            </div>
-
-            <div className="qm-about__bullets">
-              <div className="qm-about__bullet">• One-click copy + auto-copy on NEW</div>
-              <div className="qm-about__bullet">• Real-time inbox, no account needed</div>
-              <div className="qm-about__bullet">• Auto-reset on expiration for maximum privacy</div>
-            </div>
-          </section>
+          {/* small helper line */}
+          <div className="mt-2 text-xs text-muted-foreground font-display tracking-widest">
+            {expired ? "EXPIRED — CLICK NEW TO CONTINUE" : "10-minute secure inbox"}
+          </div>
         </div>
+
+        {/* Timer */}
+        <div className="glass-panel p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
+          <div
+            className={`absolute top-0 left-0 w-1 h-full transition-colors ${
+              isLastMinute ? "bg-destructive" : "bg-accent"
+            }`}
+          />
+
+          <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
+            Time Remaining
+          </h2>
+
+          <div
+            className={`text-5xl font-bold font-display tracking-wider mb-2 transition-colors ${
+              isLastMinute ? "text-destructive animate-pulse" : "text-accent"
+            }`}
+          >
+            {formatTime(timeLeft)}
+          </div>
+
+          {isLastMinute && !expired && (
+            <div className="flex items-center gap-2 text-xs text-destructive font-display tracking-widest mb-3">
+              <TriangleAlert className="w-4 h-4" />
+              LAST MINUTE — EVERYTHING WILL BE WIPED
+            </div>
+          )}
+
+          {expired && (
+            <div className="flex items-center gap-2 text-xs text-destructive font-display tracking-widest mb-3">
+              <TriangleAlert className="w-4 h-4" />
+              SESSION EXPIRED — CLICK NEW
+            </div>
+          )}
+
+          <div className="flex gap-2 w-full font-display">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 bg-black/40 border-accent/30 text-accent hover:bg-accent/20 hover:text-accent transition-all"
+              onClick={togglePause}
+              disabled={expired}
+              data-testid="button-pause"
+            >
+              {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+              {isPaused ? "RESUME" : "PAUSE"}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 gap-2 bg-black/40 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary transition-all"
+              onClick={handleNew}
+              data-testid="button-reset"
+            >
+              <RefreshCw className="w-4 h-4" />
+              NEW
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Inbox */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[500px]">
+        <div className="glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20">
+          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+            <InboxIcon className="w-5 h-5 text-primary" />
+            <h2 className="font-display tracking-widest text-lg">
+              SECURE_INBOX{" "}
+              <span className="text-primary text-sm">({inbox.length})</span>
+            </h2>
+            {isPaused && !expired && (
+              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+                Receiving Paused
+              </span>
+            )}
+            {expired && (
+              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+                Expired
+              </span>
+            )}
+          </div>
+
+          <ScrollArea className="flex-1 p-0">
+            <AnimatePresence mode="wait">
+              {selectedEmail ? (
+                <motion.div
+                  key="detail"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="p-6"
+                >
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
+                    onClick={() => setSelectedEmail(null)}
+                  >
+                    <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
+                  </Button>
+
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                        From
+                      </div>
+                      <div className="text-lg font-mono text-primary">
+                        {selectedEmail.sender}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                        Subject
+                      </div>
+                      <div className="text-xl font-bold text-white">
+                        {selectedEmail.subject}
+                      </div>
+                    </div>
+
+                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+                      {selectedEmail.body}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div key="list" className="p-2 h-full">
+                  {expired ? (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <TriangleAlert className="w-8 h-8 mb-4 opacity-40" />
+                      <p className="font-mono text-sm uppercase tracking-widest text-center">
+                        Session expired.
+                        <br />
+                        Click NEW to generate a fresh email.
+                      </p>
+                    </div>
+                  ) : inbox.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                      <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
+                      <p className="font-mono text-sm uppercase tracking-widest">
+                        Awaiting transmissions...
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {inbox.map((msg) => (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                          onClick={() => setSelectedEmail(msg)}
+                          data-testid={`row-email-${msg.id}`}
+                        >
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="font-mono text-sm text-primary truncate max-w-[70%]">
+                              {msg.sender}
+                            </div>
+                            <div className="text-xs text-muted-foreground font-mono">
+                              {msg.timestamp
+                                ? new Date(msg.timestamp as any).toLocaleString()
+                                : ""}
+                            </div>
+                          </div>
+
+                          <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
+                            {msg.subject}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground truncate">
+                            {msg.preview}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </ScrollArea>
+        </div>
+      </div>
+
+      {/* Explanation */}
+      <div className="mt-8 glass-panel p-6 rounded-xl border-primary/20">
+        <h3 className="font-display tracking-widest text-lg text-primary mb-2">
+          WHAT IS QUANTUM MAIL?
+        </h3>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Quantum Mail gives you a temporary inbox that lasts 10 minutes. Use it to
+          receive verification codes, protect your real email, and reduce spam.
+          When the timer ends, the session is wiped. Click <span className="text-primary">NEW</span>{" "}
+          to generate a fresh identity anytime.
+        </p>
       </div>
     </div>
   );
