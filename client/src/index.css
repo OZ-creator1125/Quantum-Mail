@@ -2,11 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ✅ FONTS (fallback si index.html no carga links) */
-@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;800;900&family=Rajdhani:wght@300;400;500;600;700&display=swap");
+/* =========================
+   QUANTUM_MAIL – “opengraph” look
+   (sin romper shadcn)
+   ========================= */
 
 :root {
   color-scheme: dark;
+}
+
+/* Tipografías del index.html */
+.font-display {
+  font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+.font-ui {
+  font-family: "Rajdhani", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
 
 html,
@@ -16,75 +26,606 @@ body {
 
 body {
   margin: 0;
-  font-family: "Rajdhani", system-ui, -apple-system, Segoe UI, Roboto, Arial,
-    sans-serif;
+  font-family: "Rajdhani", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: #ffffff;
 
-  /* ✅ Fondo tipo tu imagen original */
+  /* Fondo (igual vibe opengraph) */
   background:
-    radial-gradient(circle at 15% 20%, rgba(0, 255, 200, 0.10), transparent 42%),
-    radial-gradient(circle at 85% 25%, rgba(170, 0, 255, 0.10), transparent 46%),
-    radial-gradient(circle at 55% 95%, rgba(0, 255, 160, 0.06), transparent 44%),
+    radial-gradient(circle at 15% 18%, rgba(0, 255, 200, 0.10), transparent 44%),
+    radial-gradient(circle at 85% 20%, rgba(170, 0, 255, 0.10), transparent 48%),
+    radial-gradient(circle at 55% 96%, rgba(0, 255, 160, 0.06), transparent 46%),
     linear-gradient(180deg, #05060a 0%, #020617 55%, #000000 100%);
-  color: white;
 }
 
-/* ✅ fuerza Orbitron donde usas font-display */
-.font-display,
-h1,
-h2,
-h3 {
-  font-family: "Orbitron", system-ui, -apple-system, Segoe UI, Roboto, Arial,
-    sans-serif !important;
-  letter-spacing: 0.08em;
+/* =========================
+   Layout shell
+   ========================= */
+.qm-shell {
+  padding: 22px 18px;
 }
 
-/* ✅ panel glass (igual “original”) */
-.glass-panel {
+@media (min-width: 768px) {
+  .qm-shell {
+    padding: 32px;
+  }
+}
+
+.qm-wrap {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+/* Banner */
+.qm-banner {
+  border-radius: 14px;
+  border: 1px solid rgba(0, 255, 200, 0.25);
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  text-align: center;
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(0, 255, 200, 0.95);
+  font-size: 12px;
+}
+
+/* Header */
+.qm-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.qm-logo {
+  width: 28px;
+  height: 28px;
+  color: rgba(0, 255, 200, 0.95);
+  filter: drop-shadow(0 0 10px rgba(0, 255, 200, 0.18));
+}
+
+.qm-brand {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  font-size: 22px;
+  color: rgba(0, 255, 200, 0.92);
+}
+
+@media (min-width: 768px) {
+  .qm-brand {
+    font-size: 26px;
+  }
+}
+
+/* =========================
+   Grid (4 paneles)
+   ========================= */
+.qm-grid {
+  display: grid;
+  gap: 18px;
+  min-height: 640px;
+}
+
+.qm-grid--archives {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "identity"
+    "timer"
+    "inbox"
+    "archives";
+}
+
+@media (min-width: 1024px) {
+  .qm-grid--archives {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "identity timer"
+      "inbox    archives";
+  }
+}
+
+.qm-grid--noarchives {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "identity"
+    "timer"
+    "inbox";
+}
+
+@media (min-width: 1024px) {
+  .qm-grid--noarchives {
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "identity timer"
+      "inbox    inbox";
+  }
+}
+
+/* =========================
+   Panel base (glass)
+   ========================= */
+.qm-panel {
   position: relative;
   border-radius: 18px;
-  background: rgba(7, 10, 15, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  box-shadow:
-    0 10px 35px rgba(0, 0, 0, 0.55),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+
+  background: rgba(7, 10, 15, 0.58);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 34px rgba(0, 0, 0, 0.60),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.02);
 }
 
-/* ✅ línea vertical de acento (cyan / purple) */
-.qm-accent-left {
+.qm-panel__inner {
+  padding: 18px;
+}
+
+.qm-panel__inner--center {
+  padding: 18px;
+  text-align: center;
+}
+
+/* Accent bar */
+.qm-accent {
   position: absolute;
-  inset: 0 auto 0 0;
+  left: 0;
+  top: 0;
+  bottom: 0;
   width: 4px;
-  border-top-left-radius: 18px;
-  border-bottom-left-radius: 18px;
   opacity: 0.95;
 }
 
-/* ✅ input-like box del email */
-.qm-email-box {
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(0, 255, 200, 0.18);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+.qm-accent--cyan {
+  background: rgba(0, 255, 200, 0.85);
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.18);
 }
 
-/* ✅ no tocar button global (shadcn). Solo helper class */
-.qm-btn {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+.qm-accent--purple {
+  background: rgba(170, 0, 255, 0.75);
+  box-shadow: 0 0 18px rgba(170, 0, 255, 0.14);
 }
+
+/* Kicker */
+.qm-kicker {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* =========================
+   Identity panel
+   ========================= */
+.qm-panel--identity {
+  grid-area: identity;
+}
+
+.qm-identity-row {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .qm-identity-row {
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+}
+
+.qm-email {
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(0, 255, 200, 0.20);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+}
+
+.qm-email__text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 18px;
+  line-height: 1.15;
+  color: rgba(255, 255, 255, 0.92);
+  word-break: break-all;
+}
+
+@media (min-width: 768px) {
+  .qm-email__text {
+    font-size: 22px;
+  }
+}
+
+/* =========================
+   Timer panel
+   ========================= */
+.qm-panel--timer {
+  grid-area: timer;
+}
+
+.qm-timer {
+  font-family: "Orbitron", system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  font-size: clamp(34px, 4.2vw, 56px); /* un poco más chico que antes */
+  margin-top: 10px;
+  margin-bottom: 14px;
+  color: rgba(170, 0, 255, 0.90);
+  text-shadow: 0 0 18px rgba(170, 0, 255, 0.18);
+}
+
+.qm-timer-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* =========================
+   Inbox panel
+   ========================= */
+.qm-panel--inbox {
+  grid-area: inbox;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.qm-panel__top {
+  padding: 16px 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.34);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.qm-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qm-title-ico {
+  width: 18px;
+  height: 18px;
+}
+.qm-title-ico--cyan {
+  color: rgba(0, 255, 200, 0.92);
+}
+.qm-title-ico--purple {
+  color: rgba(170, 0, 255, 0.86);
+}
+
+.qm-title-text {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.90);
+}
+
+.qm-title-count {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  color: rgba(0, 255, 200, 0.85);
+}
+
+.qm-paused {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(255, 70, 70, 0.95);
+}
+
+.qm-panel__body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Empty state */
+.qm-empty {
+  height: 100%;
+  min-height: 360px;
+  display: grid;
+  place-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.qm-empty__spin {
+  width: 32px;
+  height: 32px;
+  opacity: 0.18;
+  animation: qmspin 2.6s linear infinite;
+}
+
+@keyframes qmspin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.qm-empty__text {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+/* List rows */
+.qm-list {
+  padding: 10px;
+  height: 100%;
+}
+
+.qm-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.qm-row {
+  width: 100%;
+  text-align: left;
+
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px;
+
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
+.qm-row:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 255, 200, 0.28);
+  background: rgba(0, 255, 200, 0.04);
+}
+
+.qm-row__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.qm-row__from {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  color: rgba(0, 255, 200, 0.90);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.qm-row__time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.qm-row__subject {
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.qm-row__preview {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.50);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Detail view */
+.qm-detail {
+  padding: 18px;
+}
+
+.qm-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 11px;
+
+  color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.qm-back:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.qm-meta {
+  margin-bottom: 14px;
+}
+
+.qm-meta__label {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+  margin-bottom: 6px;
+}
+
+.qm-meta__value {
+  font-size: 18px;
+  word-break: break-all;
+}
+
+.qm-meta__value--cyan {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  color: rgba(0, 255, 200, 0.92);
+}
+
+.qm-meta__value--white {
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 800;
+}
+
+.qm-body {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.70);
+}
+
+/* =========================
+   Archives panel
+   ========================= */
+.qm-panel--archives {
+  grid-area: archives;
+  display: flex;
+  flex-direction: column;
+  min-height: 420px;
+}
+
+.qm-archives {
+  padding: 12px;
+}
+
+.qm-archives__empty {
+  height: 100%;
+  min-height: 280px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 20px;
+  color: rgba(255, 255, 255, 0.38);
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.qm-archives__list {
+  display: grid;
+  gap: 12px;
+}
+
+.qm-archive {
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 14px;
+}
+
+.qm-archive__addr {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+  word-break: break-all;
+}
+
+.qm-archive__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.qm-archive__msgs {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.qm-archive__restore {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 11px;
+
+  color: rgba(170, 0, 255, 0.86);
+}
+.qm-archive__restore:hover {
+  color: rgba(170, 0, 255, 1);
+}
+
+/* =========================
+   Buttons (NO global button override)
+   ========================= */
+.qm-btn {
+  height: 44px;
+  border-radius: 12px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 12px;
+
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background 0.14s ease;
+}
+
 .qm-btn:hover {
   transform: translateY(-1px);
-  box-shadow:
-    0 0 14px rgba(0, 255, 200, 0.18),
-    0 0 26px rgba(170, 0, 255, 0.10);
 }
 
-/* ✅ timer look */
-.qm-timer {
-  font-family: "Orbitron", system-ui, sans-serif !important;
-  letter-spacing: 0.14em;
+.qm-btn--cyan {
+  border: 1px solid rgba(0, 255, 200, 0.28) !important;
+  background: rgba(0, 255, 200, 0.06) !important;
+  color: rgba(0, 255, 200, 0.92) !important;
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.10);
 }
 
-/* ✅ scroll */
+.qm-btn--purple {
+  border: 1px solid rgba(170, 0, 255, 0.25) !important;
+  background: rgba(170, 0, 255, 0.05) !important;
+  color: rgba(170, 0, 255, 0.92) !important;
+  box-shadow: 0 0 18px rgba(170, 0, 255, 0.10);
+}
+
+.qm-ico {
+  width: 16px;
+  height: 16px;
+  opacity: 0.95;
+}
+
+.qm-btn__text {
+  transform: translateY(1px);
+}
+
+/* Scrollbar */
 ::-webkit-scrollbar {
   width: 9px;
 }
