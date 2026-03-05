@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMailSession } from "@/hooks/use-mail-session";
 import { EmailMessage } from "@/lib/mock-api";
 import { Button } from "@/components/ui/button";
@@ -12,71 +12,139 @@ import {
   Check,
   ChevronLeft,
   ShieldAlert,
-  Archive,
   RotateCcw,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { createSession } from "@/lib/api";
 
-const SHOW_ARCHIVES = true; // 🔁 ponlo en false si quieres quitar ARCHIVES sin dejar huecos
-
-type ArchiveItem = {
-  id: string;
-  address: string;
-  msgs: number;
-};
+const SHOW_ARCHIVES = false; // ✅ ARCHIVES OFF (sin huecos)
 
 export default function Home() {
   const { currentEmail, inbox, timeLeft, isPaused, togglePause, setRealSession } =
     useMailSession();
 
   const { toast } = useToast();
+
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-  const [showCopiedBanner, setShowCopiedBanner] = useState(false);
 
-  // Archives “UI-only” (si ya tienes hook real para esto, lo cambiamos luego)
-  const [archives, setArchives] = useState<ArchiveItem[]>([]);
+  // Banner reutilizado (no cambiamos UI)
+  const [bannerText, setBannerText] = useState<string | null>(null);
+  const bannerTimerRef = useRef<number | null>(null);
+
+  // Para evitar doble auto-init (React StrictMode)
+  const didAutoInit = useRef(false);
+
+  // Para evitar spamear el warning del último minuto
+  const lastMinuteWarned = useRef(false);
 
   const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60).toString().padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
+    const m = Math.floor(Math.max(0, seconds) / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (Math.max(0, seconds) % 60).toString().padStart(2, "0");
     return `${m}:${s}`;
   };
 
   const timeText = useMemo(() => formatTime(timeLeft), [timeLeft]);
 
+  const showBanner = (text: string, ms = 2500) => {
+    setBannerText(text);
+    if (bannerTimerRef.current) window.clearTimeout(bannerTimerRef.current);
+    bannerTimerRef.current = window.setTimeout(() => setBannerText(null), ms);
+  };
+
+  // ✅ 1) AUTO: al abrir página crea sesión (NO clipboard)
+  useEffect(() => {
+    if (didAutoInit.current) return;
+    didAutoInit.current = true;
+
+    (async () => {
+      try {
+        const s = await createSession();
+        setRealSession({ address: s.address, token: s.token });
+        setSelectedEmail(null);
+        lastMinuteWarned.current = false;
+        showBanner("NEW EMAIL GENERATED", 2000);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "❌ Error creating session",
+          description: "Click NEW to try again.",
+          className: "bg-destructive text-destructive-foreground font-display",
+        });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ 2) WARNING en último minuto (<= 60s) — sin cambiar diseño, usamos banner
+  useEffect(() => {
+    if (isPaused) return;
+    if (timeLeft <= 60 && timeLeft > 0 && !lastMinuteWarned.current) {
+      lastMinuteWarned.current = true;
+      showBanner("⚠️ LAST MINUTE — EVERYTHING WILL BE WIPED", 3500);
+      toast({
+        title: "⚠️ Last minute",
+        description: "Your inbox will be wiped when the timer hits 00:00.",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
+    }
+    if (timeLeft > 60) {
+      // por si regeneras, resetea el flag
+      lastMinuteWarned.current = false;
+    }
+  }, [timeLeft, isPaused, toast]);
+
+  // ✅ 3) Cuando llega a 0: wipe + auto NEW (sin pedir click)
+  useEffect(() => {
+    if (isPaused) return;
+    if (timeLeft !== 0) return;
+
+    (async () => {
+      try {
+        showBanner("SESSION EXPIRED — GENERATING NEW EMAIL...", 1800);
+
+        // limpiamos UI local (inbox y email los controla el hook,
+        // pero selected sí es local)
+        setSelectedEmail(null);
+        setCopied(false);
+
+        // creamos nueva sesión
+        const s = await createSession();
+        setRealSession({ address: s.address, token: s.token });
+
+        lastMinuteWarned.current = false;
+        showBanner("NEW EMAIL GENERATED", 2000);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "❌ Error auto-renewing",
+          description: "Click NEW to generate a new email.",
+          className: "bg-destructive text-destructive-foreground font-display",
+        });
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeLeft, isPaused]);
+
+  // NEW manual (NO auto-copy para evitar popup)
   const handleRealNew = async () => {
     try {
       const s = await createSession();
 
-      // Guardar en “archives” (solo UI)
-      setArchives((prev) => {
-        const next: ArchiveItem[] = [
-          { id: s.token, address: s.address, msgs: 0 },
-          ...prev,
-        ].slice(0, 8);
-        return next;
-      });
-
-      // Copy automático
-      await navigator.clipboard.writeText(s.address);
-
-      setShowCopiedBanner(true);
-      setTimeout(() => setShowCopiedBanner(false), 2500);
-
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-
-      toast({
-        title: "✅ Email copied to clipboard",
-        description: "Paste anywhere (Ctrl+V / Cmd+V)",
-        className: "bg-primary text-primary-foreground font-display",
-      });
-
       setRealSession({ address: s.address, token: s.token });
       setSelectedEmail(null);
+
+      lastMinuteWarned.current = false;
+      showBanner("NEW EMAIL GENERATED", 2000);
+
+      toast({
+        title: "✅ New email generated",
+        description: "Use COPY if you want it on clipboard.",
+        className: "bg-primary text-primary-foreground font-display",
+      });
     } catch (err: any) {
       console.error(err);
       toast({
@@ -87,22 +155,16 @@ export default function Home() {
     }
   };
 
+  // COPY (sí es click del usuario => permitido)
   const handleCopy = async () => {
     if (!currentEmail) return;
-    await navigator.clipboard.writeText(currentEmail);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
 
-    toast({
-      title: "✅ Email copied to clipboard",
-      description: "Paste anywhere (Ctrl+V / Cmd+V)",
-      className: "bg-primary text-primary-foreground font-display",
-    });
-  };
-
-  const restoreArchive = async (item: ArchiveItem) => {
     try {
-      await navigator.clipboard.writeText(item.address);
+      await navigator.clipboard.writeText(currentEmail);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1400);
+
+      showBanner("EMAIL COPIED", 1600);
 
       toast({
         title: "✅ Email copied to clipboard",
@@ -111,18 +173,19 @@ export default function Home() {
       });
     } catch (e) {
       console.error(e);
+      toast({
+        title: "⚠️ Clipboard blocked",
+        description: "Browser blocked clipboard. Copy manually.",
+        className: "bg-destructive text-destructive-foreground font-display",
+      });
     }
   };
 
   return (
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
-        {/* Banner */}
-        {showCopiedBanner && (
-          <div className="qm-banner">
-            NEW EMAIL GENERATED &amp; COPIED
-          </div>
-        )}
+        {/* Banner (reusamos tu banner - no cambiamos diseño base) */}
+        {bannerText && <div className="qm-banner">{bannerText}</div>}
 
         {/* Header */}
         <header className="qm-header">
@@ -154,11 +217,7 @@ export default function Home() {
                   className="qm-btn qm-btn--cyan"
                   data-testid="button-copy"
                 >
-                  {copied ? (
-                    <Check className="qm-ico" />
-                  ) : (
-                    <Copy className="qm-ico" />
-                  )}
+                  {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
                   <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
                 </Button>
               </div>
@@ -220,10 +279,7 @@ export default function Home() {
                       exit={{ opacity: 0, x: -16 }}
                       className="qm-detail"
                     >
-                      <button
-                        className="qm-back"
-                        onClick={() => setSelectedEmail(null)}
-                      >
+                      <button className="qm-back" onClick={() => setSelectedEmail(null)}>
                         <ChevronLeft className="qm-ico" />
                         BACK TO INBOX
                       </button>
@@ -249,9 +305,7 @@ export default function Home() {
                       {inbox.length === 0 ? (
                         <div className="qm-empty">
                           <RotateCcw className="qm-empty__spin" />
-                          <div className="qm-empty__text">
-                            AWAITING TRANSMISSIONS...
-                          </div>
+                          <div className="qm-empty__text">AWAITING TRANSMISSIONS...</div>
                         </div>
                       ) : (
                         <div className="qm-rows">
@@ -285,42 +339,7 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Panel 4: Archives */}
-          {SHOW_ARCHIVES && (
-            <section className="qm-panel qm-panel--archives">
-              <div className="qm-panel__top">
-                <div className="qm-panel__title">
-                  <Archive className="qm-title-ico qm-title-ico--purple" />
-                  <span className="qm-title-text">ARCHIVES</span>
-                </div>
-              </div>
-
-              <div className="qm-panel__body qm-archives">
-                {archives.length === 0 ? (
-                  <div className="qm-archives__empty">
-                    NO PREVIOUS SESSIONS FOUND IN LOCAL MEMORY.
-                  </div>
-                ) : (
-                  <div className="qm-archives__list">
-                    {archives.map((a) => (
-                      <div key={a.id} className="qm-archive">
-                        <div className="qm-archive__addr">{a.address}</div>
-                        <div className="qm-archive__meta">
-                          <span className="qm-archive__msgs">{a.msgs} msgs</span>
-                          <button
-                            className="qm-archive__restore"
-                            onClick={() => restoreArchive(a)}
-                          >
-                            RESTORE
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
+          {/* ARCHIVES REMOVED */}
         </div>
       </div>
     </div>
