@@ -26,11 +26,8 @@ export default function Home() {
 
   const [copied, setCopied] = useState(false);
   const [selectedEmail, setSelectedEmail] = useState<EmailMessage | null>(null);
-
-  // ✅ when timer hits 0, require NEW
   const [expired, setExpired] = useState(false);
 
-  // ensure we auto-start only once
   const didAutoStart = useRef(false);
 
   const formatTime = (seconds: number) => {
@@ -42,7 +39,7 @@ export default function Home() {
 
   const isLastMinute = timeLeft <= 60 && timeLeft > 0;
 
-  // ✅ Auto-start: create session on first load (NO clipboard)
+  // Auto-start: create session on first load (NO clipboard)
   useEffect(() => {
     if (didAutoStart.current) return;
     didAutoStart.current = true;
@@ -57,7 +54,7 @@ export default function Home() {
         console.error(err);
         toast({
           title: "❌ Error creating session",
-          description: "Try again with NEW",
+          description: "Click NEW to try again.",
           className: "bg-destructive text-destructive-foreground font-display",
         });
         setExpired(true);
@@ -66,11 +63,11 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ✅ When time ends, lock and require NEW (NO auto-regenerate, no clipboard popups)
+  // Expire lock
   useEffect(() => {
     if (isPaused) return;
     if (timeLeft > 0) return;
-    // timeLeft === 0
+
     if (!expired) {
       setExpired(true);
       setSelectedEmail(null);
@@ -83,7 +80,6 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeLeft, isPaused]);
 
-  // ✅ NEW: generate fresh email (NO clipboard, avoids permission popup)
   const handleNew = async () => {
     try {
       const s = await createSession();
@@ -106,9 +102,9 @@ export default function Home() {
     }
   };
 
-  // ✅ COPY: only copy on user click → no popup on load
   const handleCopy = async () => {
-    if (!currentEmail) return;
+    if (!currentEmail || expired) return;
+
     try {
       await navigator.clipboard.writeText(currentEmail);
       setCopied(true);
@@ -139,24 +135,24 @@ export default function Home() {
         </h1>
       </header>
 
-      {/* Top Panel */}
+      {/* Top panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Identity */}
         <div className="lg:col-span-2 glass-panel p-6 rounded-xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+          <div className="qm-accent-left bg-primary" />
 
           <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
             Current Identity
           </h2>
 
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-1 w-full bg-black/50 border border-primary/20 rounded-lg p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
+            <div className="flex-1 w-full qm-email-box rounded-lg p-4 font-mono text-xl md:text-2xl text-white break-all select-all">
               {currentEmail || "GENERATING..."}
             </div>
 
             <Button
               size="lg"
-              className="w-full sm:w-auto gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
+              className="qm-btn w-full sm:w-auto gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30 font-display tracking-widest transition-all"
               onClick={handleCopy}
               disabled={!currentEmail || expired}
               data-testid="button-copy"
@@ -166,7 +162,6 @@ export default function Home() {
             </Button>
           </div>
 
-          {/* small helper line */}
           <div className="mt-2 text-xs text-muted-foreground font-display tracking-widest">
             {expired ? "EXPIRED — CLICK NEW TO CONTINUE" : "10-minute secure inbox"}
           </div>
@@ -174,11 +169,7 @@ export default function Home() {
 
         {/* Timer */}
         <div className="glass-panel p-6 rounded-xl flex flex-col justify-center items-center relative overflow-hidden">
-          <div
-            className={`absolute top-0 left-0 w-1 h-full transition-colors ${
-              isLastMinute ? "bg-destructive" : "bg-accent"
-            }`}
-          />
+          <div className={`qm-accent-left ${isLastMinute ? "bg-destructive" : "bg-accent"}`} />
 
           <h2 className="text-sm text-muted-foreground uppercase tracking-widest mb-2 font-display">
             Time Remaining
@@ -210,7 +201,7 @@ export default function Home() {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 gap-2 bg-black/40 border-accent/30 text-accent hover:bg-accent/20 hover:text-accent transition-all"
+              className="qm-btn flex-1 gap-2 bg-black/40 border-accent/30 text-accent hover:bg-accent/20 hover:text-accent transition-all"
               onClick={togglePause}
               disabled={expired}
               data-testid="button-pause"
@@ -222,7 +213,7 @@ export default function Home() {
             <Button
               variant="outline"
               size="sm"
-              className="flex-1 gap-2 bg-black/40 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary transition-all"
+              className="qm-btn flex-1 gap-2 bg-black/40 border-primary/30 text-primary hover:bg-primary/20 hover:text-primary transition-all"
               onClick={handleNew}
               data-testid="button-reset"
             >
@@ -233,129 +224,122 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Inbox */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-[500px]">
-        <div className="glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20">
-          <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
-            <InboxIcon className="w-5 h-5 text-primary" />
-            <h2 className="font-display tracking-widest text-lg">
-              SECURE_INBOX{" "}
-              <span className="text-primary text-sm">({inbox.length})</span>
-            </h2>
-            {isPaused && !expired && (
-              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
-                Receiving Paused
-              </span>
-            )}
-            {expired && (
-              <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
-                Expired
-              </span>
-            )}
-          </div>
+      {/* Inbox (full width now - no Archives) */}
+      <div className="glass-panel rounded-xl flex flex-col overflow-hidden relative border-primary/20 min-h-[520px]">
+        <div className="p-4 border-b border-white/10 bg-black/40 flex items-center gap-2">
+          <InboxIcon className="w-5 h-5 text-primary" />
+          <h2 className="font-display tracking-widest text-lg">
+            SECURE_INBOX <span className="text-primary text-sm">({inbox.length})</span>
+          </h2>
 
-          <ScrollArea className="flex-1 p-0">
-            <AnimatePresence mode="wait">
-              {selectedEmail ? (
-                <motion.div
-                  key="detail"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="p-6"
+          {isPaused && !expired && (
+            <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+              Receiving Paused
+            </span>
+          )}
+          {expired && (
+            <span className="ml-auto text-xs text-destructive uppercase animate-pulse font-display">
+              Expired
+            </span>
+          )}
+        </div>
+
+        <ScrollArea className="flex-1 p-0">
+          <AnimatePresence mode="wait">
+            {selectedEmail ? (
+              <motion.div
+                key="detail"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-6"
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
+                  onClick={() => setSelectedEmail(null)}
                 >
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="mb-6 gap-2 text-muted-foreground hover:text-white font-display"
-                    onClick={() => setSelectedEmail(null)}
-                  >
-                    <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
-                  </Button>
+                  <ChevronLeft className="w-4 h-4" /> BACK TO INBOX
+                </Button>
 
-                  <div className="space-y-4">
-                    <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        From
-                      </div>
-                      <div className="text-lg font-mono text-primary">
-                        {selectedEmail.sender}
-                      </div>
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                      From
                     </div>
-
-                    <div>
-                      <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
-                        Subject
-                      </div>
-                      <div className="text-xl font-bold text-white">
-                        {selectedEmail.subject}
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
-                      {selectedEmail.body}
+                    <div className="text-lg font-mono text-primary">
+                      {selectedEmail.sender}
                     </div>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div key="list" className="p-2 h-full">
-                  {expired ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                      <TriangleAlert className="w-8 h-8 mb-4 opacity-40" />
-                      <p className="font-mono text-sm uppercase tracking-widest text-center">
-                        Session expired.
-                        <br />
-                        Click NEW to generate a fresh email.
-                      </p>
-                    </div>
-                  ) : inbox.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-                      <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
-                      <p className="font-mono text-sm uppercase tracking-widest">
-                        Awaiting transmissions...
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {inbox.map((msg) => (
-                        <motion.div
-                          key={msg.id}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
-                          onClick={() => setSelectedEmail(msg)}
-                          data-testid={`row-email-${msg.id}`}
-                        >
-                          <div className="flex justify-between items-start mb-2">
-                            <div className="font-mono text-sm text-primary truncate max-w-[70%]">
-                              {msg.sender}
-                            </div>
-                            <div className="text-xs text-muted-foreground font-mono">
-                              {msg.timestamp
-                                ? new Date(msg.timestamp as any).toLocaleString()
-                                : ""}
-                            </div>
-                          </div>
 
-                          <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
-                            {msg.subject}
-                          </div>
-
-                          <div className="text-sm text-muted-foreground truncate">
-                            {msg.preview}
-                          </div>
-                        </motion.div>
-                      ))}
+                  <div>
+                    <div className="text-xs text-muted-foreground uppercase mb-1 font-display">
+                      Subject
                     </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </ScrollArea>
-        </div>
+                    <div className="text-xl font-bold text-white">{selectedEmail.subject}</div>
+                  </div>
+
+                  <div className="pt-6 border-t border-white/10 whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-300">
+                    {selectedEmail.body}
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="list" className="p-2 h-full">
+                {expired ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <TriangleAlert className="w-8 h-8 mb-4 opacity-40" />
+                    <p className="font-mono text-sm uppercase tracking-widest text-center">
+                      Session expired.
+                      <br />
+                      Click NEW to generate a fresh email.
+                    </p>
+                  </div>
+                ) : inbox.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                    <RefreshCw className="w-8 h-8 mb-4 animate-[spin_3s_linear_infinite] opacity-20" />
+                    <p className="font-mono text-sm uppercase tracking-widest">
+                      Awaiting transmissions...
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 p-2">
+                    {inbox.map((msg) => (
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-4 bg-black/40 border border-white/5 rounded-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                        onClick={() => setSelectedEmail(msg)}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="font-mono text-sm text-primary truncate max-w-[70%]">
+                            {msg.sender}
+                          </div>
+                          <div className="text-xs text-muted-foreground font-mono">
+                            {msg.timestamp ? new Date(msg.timestamp as any).toLocaleString() : ""}
+                          </div>
+                        </div>
+
+                        <div className="font-bold mb-1 truncate text-white group-hover:text-primary transition-colors">
+                          {msg.subject}
+                        </div>
+
+                        <div className="text-sm text-muted-foreground truncate">
+                          {msg.preview}
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </ScrollArea>
       </div>
 
-      {/* Explanation */}
+      {/* What is */}
       <div className="mt-8 glass-panel p-6 rounded-xl border-primary/20">
         <h3 className="font-display tracking-widest text-lg text-primary mb-2">
           WHAT IS QUANTUM MAIL?
