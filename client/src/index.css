@@ -102,31 +102,12 @@ body {
 }
 
 /* =========================
-   Grid (4 paneles)
+   Grid
    ========================= */
 .qm-grid {
   display: grid;
   gap: 18px;
   min-height: 640px;
-}
-
-.qm-grid--archives {
-  grid-template-columns: 1fr;
-  grid-template-areas:
-    "identity"
-    "timer"
-    "inbox"
-    "archives";
-}
-
-@media (min-width: 1024px) {
-  .qm-grid--archives {
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: auto 1fr;
-    grid-template-areas:
-      "identity timer"
-      "inbox    archives";
-  }
 }
 
 .qm-grid--noarchives {
@@ -256,7 +237,7 @@ body {
   font-family: "Orbitron", system-ui, sans-serif;
   font-weight: 800;
   letter-spacing: 0.10em;
-  font-size: clamp(34px, 4.2vw, 56px); /* un poco más chico que antes */
+  font-size: clamp(34px, 4.2vw, 56px);
   margin-top: 10px;
   margin-bottom: 14px;
   color: rgba(170, 0, 255, 0.90);
@@ -301,9 +282,6 @@ body {
 }
 .qm-title-ico--cyan {
   color: rgba(0, 255, 200, 0.92);
-}
-.qm-title-ico--purple {
-  color: rgba(170, 0, 255, 0.86);
 }
 
 .qm-title-text {
@@ -500,84 +478,6 @@ body {
 }
 
 /* =========================
-   Archives panel
-   ========================= */
-.qm-panel--archives {
-  grid-area: archives;
-  display: flex;
-  flex-direction: column;
-  min-height: 420px;
-}
-
-.qm-archives {
-  padding: 12px;
-}
-
-.qm-archives__empty {
-  height: 100%;
-  min-height: 280px;
-  display: grid;
-  place-items: center;
-  text-align: center;
-  padding: 20px;
-  color: rgba(255, 255, 255, 0.38);
-  font-family: "Orbitron", system-ui, sans-serif;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  font-size: 11px;
-}
-
-.qm-archives__list {
-  display: grid;
-  gap: 12px;
-}
-
-.qm-archive {
-  border-radius: 14px;
-  background: rgba(0, 0, 0, 0.38);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 14px;
-}
-
-.qm-archive__addr {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.85);
-  word-break: break-all;
-}
-
-.qm-archive__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.qm-archive__msgs {
-  font-family: "Orbitron", system-ui, sans-serif;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.45);
-}
-
-.qm-archive__restore {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-
-  font-family: "Orbitron", system-ui, sans-serif;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  font-size: 11px;
-
-  color: rgba(170, 0, 255, 0.86);
-}
-.qm-archive__restore:hover {
-  color: rgba(170, 0, 255, 1);
-}
-
-/* =========================
    Buttons (NO global button override)
    ========================= */
 .qm-btn {
@@ -635,4 +535,66 @@ body {
 }
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.35);
+}
+
+/* ===== Expiring warning + danger timer (last minute) ===== */
+.qm-expire-warning {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 12px;
+
+  background: rgba(255, 40, 40, 0.08);
+  border: 1px solid rgba(255, 40, 40, 0.28);
+
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: rgba(255, 210, 210, 0.95);
+}
+
+.qm-expire-warning__ico {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 80, 80, 0.95);
+  filter: drop-shadow(0 0 10px rgba(255, 40, 40, 0.20));
+}
+
+.qm-timer--danger {
+  color: rgba(255, 70, 70, 0.95) !important;
+  text-shadow: 0 0 18px rgba(255, 40, 40, 0.22) !important;
+  animation: qmDangerPulse 0.9s ease-in-out infinite;
+}
+
+@keyframes qmDangerPulse {
+  0% { transform: scale(1); opacity: 0.92; }
+  50% { transform: scale(1.02); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.92; }
+}
+
+/* About section */
+.qm-about {
+  margin-top: 18px;
+  padding: 14px 6px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.qm-about__title {
+  font-family: "Orbitron", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 14px;
+  margin: 0 0 8px 0;
+  color: rgba(255, 255, 255, 0.86);
+}
+
+.qm-about__text {
+  margin: 0;
+  line-height: 1.6;
+  font-size: 14px;
+  max-width: 900px;
 }
