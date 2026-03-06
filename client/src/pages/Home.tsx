@@ -281,6 +281,42 @@ export default function Home() {
             your privacy, and makes quick sign-ups safer. When the timer ends, your inbox is erased
             and you can generate a fresh address with NEW.
           </p>
+
+          <div
+            style={{
+              marginTop: 28,
+              paddingTop: 18,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "14px 18px",
+              alignItems: "center",
+            }}
+          >
+            <a
+              href="/privacy"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Privacy Policy
+            </a>
+
+            <a
+              href="/terms"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Terms of Service
+            </a>
+
+            <a
+              href="/contact"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Contact
+            </a>
+          </div>
         </section>
       </div>
     </div>
