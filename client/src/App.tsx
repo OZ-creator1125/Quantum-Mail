@@ -1,22 +1,19 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import Contact from "./pages/Contact";
+import TemporaryEmail from "./pages/TemporaryEmail";
 
 export default function App() {
-  const path = window.location.pathname;
+  return (
+    <BrowserRouter>
+      <Routes>
 
-  if (path === "/privacy") {
-    return <Privacy />;
-  }
+        {/* Página principal */}
+        <Route path="/" element={<Home />} />
 
-  if (path === "/terms") {
-    return <Terms />;
-  }
+        {/* Página SEO */}
+        <Route path="/temporary-email" element={<TemporaryEmail />} />
 
-  if (path === "/contact") {
-    return <Contact />;
-  }
-
-  return <Home />;
+      </Routes>
+    </BrowserRouter>
+  );
 }
