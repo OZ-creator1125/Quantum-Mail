@@ -48,7 +48,6 @@ export default function Home() {
     try {
       const s = await createSession();
 
-      // Copy automático del nuevo correo
       await navigator.clipboard.writeText(s.address);
 
       setShowCopiedBanner(true);
@@ -92,20 +91,18 @@ export default function Home() {
   return (
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
-        {/* Banner */}
+
         {showCopiedBanner && (
-          <div className="qm-banner">NEW EMAIL GENERATED &amp; COPIED</div>
+          <div className="qm-banner">NEW EMAIL GENERATED & COPIED</div>
         )}
 
-        {/* Header */}
         <header className="qm-header">
           <ShieldAlert className="qm-logo" />
           <h1 className="qm-brand">QUANTUM_MAIL</h1>
         </header>
 
-        {/* Grid (SIN ARCHIVES) */}
         <div className="qm-grid qm-grid--noarchives">
-          {/* Panel 1: Current Identity */}
+
           <section className="qm-panel qm-panel--identity">
             <div className="qm-accent qm-accent--cyan" />
             <div className="qm-panel__inner">
@@ -122,7 +119,6 @@ export default function Home() {
                   onClick={handleCopy}
                   className="qm-btn qm-btn--cyan"
                   disabled={!currentEmail}
-                  data-testid="button-copy"
                 >
                   {copied ? <Check className="qm-ico" /> : <Copy className="qm-ico" />}
                   <span className="qm-btn__text">{copied ? "COPIED" : "COPY"}</span>
@@ -131,7 +127,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Panel 2: Timer */}
           <section className="qm-panel qm-panel--timer">
             <div className="qm-accent qm-accent--purple" />
             <div className="qm-panel__inner qm-panel__inner--center">
@@ -141,7 +136,6 @@ export default function Home() {
                 {timeText}
               </div>
 
-              {/* Warning last minute */}
               {isLastMinute && !isExpired && (
                 <div className="qm-expire-warning">
                   <TriangleAlert className="qm-expire-warning__ico" />
@@ -149,7 +143,6 @@ export default function Home() {
                 </div>
               )}
 
-              {/* Expired state */}
               {isExpired && (
                 <div className="qm-expire-warning">
                   <TriangleAlert className="qm-expire-warning__ico" />
@@ -163,7 +156,6 @@ export default function Home() {
                   onClick={togglePause}
                   className="qm-btn qm-btn--purple"
                   disabled={isExpired || !currentEmail}
-                  data-testid="button-pause"
                 >
                   {isPaused ? <Play className="qm-ico" /> : <Pause className="qm-ico" />}
                   <span className="qm-btn__text">{isPaused ? "RESUME" : "PAUSE"}</span>
@@ -173,7 +165,6 @@ export default function Home() {
                   variant="outline"
                   onClick={handleRealNew}
                   className="qm-btn qm-btn--cyan"
-                  data-testid="button-reset"
                 >
                   <RefreshCw className="qm-ico" />
                   <span className="qm-btn__text">NEW</span>
@@ -182,7 +173,6 @@ export default function Home() {
             </div>
           </section>
 
-          {/* Panel 3: Inbox */}
           <section className="qm-panel qm-panel--inbox">
             <div className="qm-panel__top">
               <div className="qm-panel__title">
@@ -197,6 +187,7 @@ export default function Home() {
 
             <div className="qm-panel__body">
               <ScrollArea className="h-full w-full">
+
                 <AnimatePresence mode="wait">
                   {selectedEmail ? (
                     <motion.div
@@ -206,7 +197,11 @@ export default function Home() {
                       exit={{ opacity: 0, x: -16 }}
                       className="qm-detail"
                     >
-                      <button className="qm-back" onClick={() => setSelectedEmail(null)}>
+
+                      <button
+                        className="qm-back"
+                        onClick={() => setSelectedEmail(null)}
+                      >
                         <ChevronLeft className="qm-ico" />
                         BACK TO INBOX
                       </button>
@@ -229,15 +224,20 @@ export default function Home() {
                     </motion.div>
                   ) : (
                     <motion.div key="list" className="qm-list">
+
                       {isExpired ? (
                         <div className="qm-empty">
                           <RotateCcw className="qm-empty__spin" />
-                          <div className="qm-empty__text">SESSION EXPIRED — CLICK NEW</div>
+                          <div className="qm-empty__text">
+                            SESSION EXPIRED — CLICK NEW
+                          </div>
                         </div>
                       ) : inbox.length === 0 ? (
                         <div className="qm-empty">
                           <RotateCcw className="qm-empty__spin" />
-                          <div className="qm-empty__text">AWAITING TRANSMISSIONS...</div>
+                          <div className="qm-empty__text">
+                            AWAITING TRANSMISSIONS...
+                          </div>
                         </div>
                       ) : (
                         <div className="qm-rows">
@@ -258,6 +258,7 @@ export default function Home() {
                                     : ""}
                                 </div>
                               </div>
+
                               <div className="qm-row__subject">{msg.subject}</div>
                               <div className="qm-row__preview">{msg.preview}</div>
                             </motion.button>
@@ -267,57 +268,34 @@ export default function Home() {
                     </motion.div>
                   )}
                 </AnimatePresence>
+
               </ScrollArea>
             </div>
           </section>
         </div>
 
-        {/* About / explanation (debajo, premium) */}
-        <section className="qm-about">
-          <h3 className="qm-about__title">What is Quantum Mail?</h3>
-          <p className="qm-about__text">
-            Quantum Mail is a free, anonymous 10-minute email address you can use to receive
-            verification emails without exposing your real inbox. It helps reduce spam, protects
-            your privacy, and makes quick sign-ups safer. When the timer ends, your inbox is erased
-            and you can generate a fresh address with NEW.
+        {/* SEO BLOCK – invisible */}
+        <section style={{ display: "none" }}>
+          <h1>Free Temporary Email Generator</h1>
+
+          <p>
+            Quantum Mail is a free temporary email generator that allows users
+            to create disposable email addresses instantly. Use a temporary
+            email address to receive verification emails, protect your privacy,
+            and avoid spam.
           </p>
 
-          <div
-            style={{
-              marginTop: 28,
-              paddingTop: 18,
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "14px 18px",
-              alignItems: "center",
-            }}
-          >
-            <a
-              href="/privacy"
-              className="qm-about__text"
-              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
-            >
-              Privacy Policy
-            </a>
+          <p>
+            Our disposable email service generates anonymous inboxes that expire
+            automatically. Perfect for website registrations and verification emails.
+          </p>
 
-            <a
-              href="/terms"
-              className="qm-about__text"
-              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
-            >
-              Terms of Service
-            </a>
-
-            <a
-              href="/contact"
-              className="qm-about__text"
-              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
-            >
-              Contact
-            </a>
-          </div>
+          <p>
+            Quantum Mail provides a fast temporary email solution, also known as
+            temp mail, fake email generator, burner email, or 10 minute email service.
+          </p>
         </section>
+
       </div>
     </div>
   );
