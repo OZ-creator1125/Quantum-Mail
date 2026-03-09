@@ -1,23 +1,17 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Home from "./pages/Home";
-import TemporaryEmail from "./pages/TemporaryEmail";
-import TempMail from "./pages/TempMail";
-import FakeEmail from "./pages/FakeEmail";
-import TenMinuteEmail from "./pages/TenMinuteEmail";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Contact from "./pages/Contact";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-
         <Route path="/" element={<Home />} />
-
-        <Route path="/temporary-email" element={<TemporaryEmail />} />
-        <Route path="/temp-mail" element={<TempMail />} />
-        <Route path="/fake-email" element={<FakeEmail />} />
-        <Route path="/10-minute-email" element={<TenMinuteEmail />} />
-
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </BrowserRouter>
   );
