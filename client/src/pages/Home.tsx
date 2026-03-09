@@ -313,6 +313,26 @@ export default function Home() {
               Contact
             </a>
           </div>
+
+          <section style={{ marginTop: 40 }}>
+            <h3 className="qm-about__title">Popular Searches</h3>
+
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "12px",
+                marginTop: "10px",
+              }}
+            >
+              <a href="/temp-mail" className="qm-about__text">Temp Mail</a>
+              <a href="/temporary-email" className="qm-about__text">Temporary Email</a>
+              <a href="/disposable-email" className="qm-about__text">Disposable Email</a>
+              <a href="/10-minute-email" className="qm-about__text">10 Minute Email</a>
+              <a href="/free-temp-mail" className="qm-about__text">Free Temp Mail</a>
+              <a href="/anonymous-email" className="qm-about__text">Anonymous Email</a>
+            </div>
+          </section>
         </section>
 
         {/* SEO BLOCK – invisible */}
