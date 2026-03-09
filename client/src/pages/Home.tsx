@@ -91,7 +91,6 @@ export default function Home() {
   return (
     <div className="qm-shell min-h-screen">
       <div className="qm-wrap">
-
         {showCopiedBanner && (
           <div className="qm-banner">NEW EMAIL GENERATED & COPIED</div>
         )}
@@ -102,7 +101,6 @@ export default function Home() {
         </header>
 
         <div className="qm-grid qm-grid--noarchives">
-
           <section className="qm-panel qm-panel--identity">
             <div className="qm-accent qm-accent--cyan" />
             <div className="qm-panel__inner">
@@ -187,7 +185,6 @@ export default function Home() {
 
             <div className="qm-panel__body">
               <ScrollArea className="h-full w-full">
-
                 <AnimatePresence mode="wait">
                   {selectedEmail ? (
                     <motion.div
@@ -197,7 +194,6 @@ export default function Home() {
                       exit={{ opacity: 0, x: -16 }}
                       className="qm-detail"
                     >
-
                       <button
                         className="qm-back"
                         onClick={() => setSelectedEmail(null)}
@@ -224,7 +220,6 @@ export default function Home() {
                     </motion.div>
                   ) : (
                     <motion.div key="list" className="qm-list">
-
                       {isExpired ? (
                         <div className="qm-empty">
                           <RotateCcw className="qm-empty__spin" />
@@ -268,11 +263,57 @@ export default function Home() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
               </ScrollArea>
             </div>
           </section>
         </div>
+
+        {/* About / explanation */}
+        <section className="qm-about">
+          <h3 className="qm-about__title">What is Quantum Mail?</h3>
+          <p className="qm-about__text">
+            Quantum Mail is a free, anonymous 10-minute email address you can use to receive
+            verification emails without exposing your real inbox. It helps reduce spam, protects
+            your privacy, and makes quick sign-ups safer. When the timer ends, your inbox is erased
+            and you can generate a fresh address with NEW.
+          </p>
+
+          <div
+            style={{
+              marginTop: 28,
+              paddingTop: 18,
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "14px 18px",
+              alignItems: "center",
+            }}
+          >
+            <a
+              href="/privacy"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Privacy Policy
+            </a>
+
+            <a
+              href="/terms"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Terms of Service
+            </a>
+
+            <a
+              href="/contact"
+              className="qm-about__text"
+              style={{ textDecoration: "none", color: "rgba(0,255,200,0.9)" }}
+            >
+              Contact
+            </a>
+          </div>
+        </section>
 
         {/* SEO BLOCK – invisible */}
         <section style={{ display: "none" }}>
@@ -295,7 +336,6 @@ export default function Home() {
             temp mail, fake email generator, burner email, or 10 minute email service.
           </p>
         </section>
-
       </div>
     </div>
   );
