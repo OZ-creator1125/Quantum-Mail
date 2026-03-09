@@ -1,83 +1,169 @@
-import { defineConfig, type Plugin } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import { mkdir, writeFile } from "node:fs/promises";
-import { metaImagesPlugin } from "./vite-plugin-meta-images";
-import { seoRoutes } from "./shared/seo-routes";
+<?xml version="1.0" encoding="UTF-8"?>
 
-function generateSitemapPlugin(): Plugin {
-  return {
-    name: "generate-sitemap",
-    async buildStart() {
-      const publicDir = path.resolve(import.meta.dirname, "client", "public");
-      const sitemapPath = path.resolve(publicDir, "sitemap.xml");
-
-      await mkdir(publicDir, { recursive: true });
-
-      const staticUrls = [
-        { loc: "https://qmailtemp.com/", priority: "1.0", changefreq: "daily" },
-        { loc: "https://qmailtemp.com/privacy", priority: "0.4", changefreq: "monthly" },
-        { loc: "https://qmailtemp.com/terms", priority: "0.4", changefreq: "monthly" },
-        { loc: "https://qmailtemp.com/contact", priority: "0.4", changefreq: "monthly" },
-      ];
-
-      const dynamicUrls = seoRoutes.map((route) => ({
-        loc: `https://qmailtemp.com/${route.slug}`,
-        priority: route.lang === "es" ? "0.8" : "0.9",
-        changefreq: "weekly",
-      }));
-
-      const urls = [...staticUrls, ...dynamicUrls];
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls
-  .map(
-    (url) => `  <url>
-    <loc>${url.loc}</loc>
-    <changefreq>${url.changefreq}</changefreq>
-    <priority>${url.priority}</priority>
-  </url>`
-  )
-  .join("\n")}
+
+<url>
+<loc>https://qmailtemp.com/</loc>
+<changefreq>daily</changefreq>
+<priority>1.0</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/temp-mail</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/temporary-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/disposable-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/10-minute-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/free-temp-mail</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/anonymous-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/burner-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/random-email-generator</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/temp-email-generator</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/secure-temp-mail</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/fake-email-generator</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/throwaway-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/temporary-inbox</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/one-time-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/email-for-verification</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/no-signup-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.9</priority>
+</url>
+
+<!-- Español -->
+
+<url>
+<loc>https://qmailtemp.com/correo-temporal</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/email-temporal</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/correo-desechable</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/correo-anonimo</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/generador-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/email-temporal-gratis</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/correo-10-minutos</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/buzon-temporal</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/email-para-verificacion</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
+<url>
+<loc>https://qmailtemp.com/correo-provisional</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
+
 </urlset>
-`;
-
-      await writeFile(sitemapPath, xml, "utf8");
-      console.log(`✅ sitemap generado: ${sitemapPath}`);
-    },
-  };
-}
-
-export default defineConfig({
-  plugins: [
-    react(),
-    metaImagesPlugin(),
-    generateSitemapPlugin(),
-  ],
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets"),
-    },
-  },
-  css: {
-    postcss: {
-      plugins: [],
-    },
-  },
-  root: path.resolve(import.meta.dirname, "client"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true,
-  },
-  server: {
-    host: "0.0.0.0",
-    allowedHosts: true,
-    fs: {
-      strict: true,
-      deny: ["**/.*"],
-    },
-  },
-});
