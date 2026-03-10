@@ -57,9 +57,8 @@ export default function Home() {
       setTimeout(() => setCopied(false), 1500);
 
       toast({
-        title: "✅ Email copied to clipboard",
+        title: "Email copied to clipboard",
         description: "Paste anywhere (Ctrl+V / Cmd+V)",
-        className: "bg-primary text-primary-foreground font-display",
       });
 
       setRealSession({ address: s.address, token: s.token });
@@ -67,9 +66,8 @@ export default function Home() {
     } catch (err: any) {
       console.error(err);
       toast({
-        title: "❌ Error creating new session",
-        description: "Check console (F12) and Railway logs",
-        className: "bg-destructive text-destructive-foreground font-display",
+        title: "Error creating new session",
+        description: "Check console and API logs",
       });
     }
   };
@@ -82,9 +80,8 @@ export default function Home() {
     setTimeout(() => setCopied(false), 1400);
 
     toast({
-      title: "✅ Email copied to clipboard",
+      title: "Email copied to clipboard",
       description: "Paste anywhere (Ctrl+V / Cmd+V)",
-      className: "bg-primary text-primary-foreground font-display",
     });
   };
 
@@ -103,7 +100,7 @@ export default function Home() {
 
         <div className="qm-grid qm-grid--noarchives">
 
-          {/* CURRENT IDENTITY */}
+          {/* EMAIL */}
           <section className="qm-panel qm-panel--identity">
             <div className="qm-accent qm-accent--cyan" />
             <div className="qm-panel__inner">
@@ -149,7 +146,7 @@ export default function Home() {
               {isExpired && (
                 <div className="qm-expire-warning">
                   <TriangleAlert className="qm-expire-warning__ico" />
-                  <span>SESSION EXPIRED — CLICK NEW TO START</span>
+                  <span>SESSION EXPIRED — CLICK NEW</span>
                 </div>
               )}
 
@@ -193,7 +190,6 @@ export default function Home() {
             </div>
 
             <div className="qm-panel__body">
-
               <ScrollArea className="h-full w-full">
 
                 <AnimatePresence mode="wait">
@@ -229,11 +225,10 @@ export default function Home() {
                         </div>
                       </div>
 
-                      <div className="qm-body">
-                        {selectedEmail.body}
-                      </div>
+                      <div className="qm-body">{selectedEmail.body}</div>
 
                     </motion.div>
+
                   ) : (
 
                     <motion.div key="list" className="qm-list">
@@ -253,9 +248,7 @@ export default function Home() {
                           </div>
                         </div>
                       ) : (
-
                         <div className="qm-rows">
-
                           {inbox.map((msg, idx) => (
                             <motion.button
                               key={msg.id}
@@ -265,12 +258,8 @@ export default function Home() {
                               className="qm-row"
                               onClick={() => setSelectedEmail(msg)}
                             >
-
                               <div className="qm-row__top">
-                                <div className="qm-row__from">
-                                  {msg.sender}
-                                </div>
-
+                                <div className="qm-row__from">{msg.sender}</div>
                                 <div className="qm-row__time">
                                   {msg.timestamp
                                     ? new Date(msg.timestamp as any).toLocaleString()
@@ -278,17 +267,11 @@ export default function Home() {
                                 </div>
                               </div>
 
-                              <div className="qm-row__subject">
-                                {msg.subject}
-                              </div>
-
-                              <div className="qm-row__preview">
-                                {msg.preview}
-                              </div>
+                              <div className="qm-row__subject">{msg.subject}</div>
+                              <div className="qm-row__preview">{msg.preview}</div>
 
                             </motion.button>
                           ))}
-
                         </div>
                       )}
 
@@ -299,94 +282,48 @@ export default function Home() {
                 </AnimatePresence>
 
               </ScrollArea>
-
             </div>
-
           </section>
-
         </div>
 
         {/* ABOUT */}
-        <section className="qm-about">
 
-          <h3 className="qm-about__title">
-            What is Quantum Mail?
-          </h3>
+        <section className="qm-about">
+          <h3 className="qm-about__title">What is Quantum Mail?</h3>
 
           <p className="qm-about__text">
-            Quantum Mail is a free, anonymous 10-minute email address you can use to receive
-            verification emails without exposing your real inbox. It helps reduce spam,
-            protects your privacy, and makes quick sign-ups safer.
+            Quantum Mail is a free temporary email generator that allows you to create disposable email addresses instantly.
+            Use temporary inboxes to receive verification emails, protect your privacy and avoid spam.
           </p>
 
-          {/* LEGAL LINKS */}
+          {/* BANNER SPACE */}
+
           <div
             style={{
-              marginTop: 28,
-              paddingTop: 18,
-              borderTop: "1px solid rgba(255,255,255,0.08)",
-              display: "flex",
-              flexWrap: "wrap",
-              gap: "14px 18px",
-              alignItems: "center",
+              marginTop: "30px",
+              textAlign: "center",
             }}
           >
-            <a href="/privacy" className="qm-about__text">Privacy Policy</a>
-            <a href="/terms" className="qm-about__text">Terms of Service</a>
-            <a href="/contact" className="qm-about__text">Contact</a>
+            <div
+              id="ad-banner"
+              style={{
+                width: "100%",
+                maxWidth: "728px",
+                height: "90px",
+                margin: "0 auto",
+                background: "#0f172a",
+                border: "1px solid rgba(255,255,255,0.08)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#64748b",
+                fontSize: "12px",
+              }}
+            >
+              Advertisement
+            </div>
           </div>
 
-          {/* POPULAR SEARCHES ENGLISH */}
-          <section style={{ marginTop: 40 }}>
-            <h3 className="qm-about__title">Popular Searches</h3>
-
-            <div style={{display:"flex",flexWrap:"wrap",gap:"12px",marginTop:"10px"}}>
-
-              <a href="/temp-mail" className="qm-about__text">Temp Mail</a>
-              <a href="/temporary-email" className="qm-about__text">Temporary Email</a>
-              <a href="/disposable-email" className="qm-about__text">Disposable Email</a>
-              <a href="/10-minute-email" className="qm-about__text">10 Minute Email</a>
-              <a href="/free-temp-mail" className="qm-about__text">Free Temp Mail</a>
-              <a href="/anonymous-email" className="qm-about__text">Anonymous Email</a>
-
-            </div>
-          </section>
-
-          {/* POPULAR SEARCHES SPANISH */}
-          <section style={{ marginTop: 40 }}>
-            <h3 className="qm-about__title">Búsquedas populares</h3>
-
-            <div style={{display:"flex",flexWrap:"wrap",gap:"12px",marginTop:"10px"}}>
-
-              <a href="/correo-temporal" className="qm-about__text">Correo temporal</a>
-              <a href="/email-temporal" className="qm-about__text">Email temporal</a>
-              <a href="/correo-desechable" className="qm-about__text">Correo desechable</a>
-              <a href="/correo-anonimo" className="qm-about__text">Correo anónimo</a>
-              <a href="/generador-email" className="qm-about__text">Generador de email</a>
-              <a href="/email-temporal-gratis" className="qm-about__text">Email temporal gratis</a>
-              <a href="/correo-10-minutos" className="qm-about__text">Correo 10 minutos</a>
-
-            </div>
-          </section>
-
-        </section>
-
-        {/* SEO BLOCK */}
-        <section style={{ display: "none" }}>
-          <h1>Free Temporary Email Generator</h1>
-
-          <p>
-            Quantum Mail is a free temporary email generator that allows users
-            to create disposable email addresses instantly.
-          </p>
-
-          <p>
-            Our disposable email service generates anonymous inboxes that expire automatically.
-          </p>
-
-          <p>
-            Temporary email, temp mail, burner email and 10 minute email service.
-          </p>
         </section>
 
       </div>
