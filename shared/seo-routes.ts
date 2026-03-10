@@ -6,276 +6,344 @@ export type SEORoute = {
   body: string;
 };
 
-export const seoRoutes: SEORoute[] = [
+type Topic = {
+  baseSlug: string;
+  keyword: string;
+  titleBase: string;
+  descriptionBase: string;
+  bodyBase: string;
+};
+
+type Modifier = {
+  slug: string;
+  label: string;
+  descriptionTail: string;
+  bodyTail: string;
+};
+
+const enBaseTopics: Topic[] = [
   {
-    slug: "temp-mail",
-    lang: "en",
-    title: "Free Temp Mail Generator",
-    description:
-      "Generate a free temp mail address instantly with Quantum Mail. Receive verification emails anonymously and avoid spam.",
-    body:
-      "Temp mail is one of the fastest ways to protect your real inbox from spam and unwanted marketing emails.",
+    baseSlug: "temp-mail",
+    keyword: "temp mail",
+    titleBase: "Free Temp Mail",
+    descriptionBase: "Get free temp mail instantly with Quantum Mail.",
+    bodyBase: "Temp mail helps users protect their real inbox and receive messages anonymously.",
   },
   {
-    slug: "temporary-email",
-    lang: "en",
-    title: "Temporary Email Address Generator",
-    description:
-      "Create a temporary email address in seconds. Use Quantum Mail to receive emails without exposing your personal inbox.",
-    body:
-      "A temporary email address is useful for signups, downloads, and account verification when you want extra privacy.",
+    baseSlug: "temporary-email",
+    keyword: "temporary email",
+    titleBase: "Temporary Email",
+    descriptionBase: "Create a temporary email address instantly with Quantum Mail.",
+    bodyBase: "Temporary email addresses are useful for fast signups, verification codes, and privacy protection.",
   },
   {
-    slug: "disposable-email",
-    lang: "en",
-    title: "Disposable Email Service",
-    description:
-      "Use a disposable email to sign up safely online. Quantum Mail helps protect your privacy and reduce spam.",
-    body:
-      "Disposable email services are widely used to keep your main inbox clean while still receiving one-time messages.",
+    baseSlug: "disposable-email",
+    keyword: "disposable email",
+    titleBase: "Disposable Email",
+    descriptionBase: "Use a disposable email address to avoid spam and protect your inbox.",
+    bodyBase: "Disposable email services are commonly used for one-time registrations and online forms.",
   },
   {
-    slug: "10-minute-email",
-    lang: "en",
-    title: "10 Minute Email",
-    description:
-      "Get a 10 minute email address instantly with Quantum Mail. Receive emails fast and let the inbox expire automatically.",
-    body:
-      "A 10 minute email is ideal for short-lived accounts, quick verifications, and privacy-focused browsing.",
+    baseSlug: "burner-email",
+    keyword: "burner email",
+    titleBase: "Burner Email",
+    descriptionBase: "Generate a burner email instantly using Quantum Mail.",
+    bodyBase: "Burner email tools are ideal for temporary online activity and privacy-focused users.",
   },
   {
-    slug: "free-temp-mail",
-    lang: "en",
-    title: "Free Temp Mail",
-    description:
-      "Quantum Mail offers free temp mail for instant anonymous email access. No signup required.",
-    body:
-      "Free temp mail helps you avoid spam, protect your identity, and keep your personal email secure.",
+    baseSlug: "10-minute-email",
+    keyword: "10 minute email",
+    titleBase: "10 Minute Email",
+    descriptionBase: "Get a 10 minute email inbox instantly with Quantum Mail.",
+    bodyBase: "A 10 minute email address is useful for quick verifications and short-lived online use.",
   },
   {
-    slug: "anonymous-email",
-    lang: "en",
-    title: "Anonymous Email Inbox",
-    description:
-      "Use an anonymous email inbox with Quantum Mail to receive messages without exposing your identity.",
-    body:
-      "Anonymous email solutions are ideal for privacy, temporary signups, and one-time verification codes.",
+    baseSlug: "fake-email-generator",
+    keyword: "fake email generator",
+    titleBase: "Fake Email Generator",
+    descriptionBase: "Use Quantum Mail as a fake email generator for testing and verification.",
+    bodyBase: "Fake email generators help users avoid sharing personal inboxes while receiving temporary messages.",
   },
   {
-    slug: "burner-email",
-    lang: "en",
-    title: "Burner Email Generator",
-    description:
-      "Generate a burner email instantly and keep your personal inbox private with Quantum Mail.",
-    body:
-      "Burner email addresses are useful when you want a short-term inbox for testing, signups, or privacy protection.",
+    baseSlug: "anonymous-email",
+    keyword: "anonymous email",
+    titleBase: "Anonymous Email",
+    descriptionBase: "Create an anonymous email inbox with Quantum Mail.",
+    bodyBase: "Anonymous email tools help users protect identity and reduce spam exposure.",
   },
   {
-    slug: "random-email-generator",
-    lang: "en",
-    title: "Random Email Generator",
-    description:
-      "Create a random email address instantly with Quantum Mail and receive emails without registration.",
-    body:
-      "A random email generator helps users get immediate access to a disposable inbox for quick online use.",
+    baseSlug: "temp-email-generator",
+    keyword: "temp email generator",
+    titleBase: "Temp Email Generator",
+    descriptionBase: "Generate temp email addresses instantly with Quantum Mail.",
+    bodyBase: "A temp email generator is ideal for privacy, online testing, and disposable inbox access.",
+  }
+];
+
+const enModifiers: Modifier[] = [
+  {
+    slug: "for-discord",
+    label: "for Discord",
+    descriptionTail: "Perfect for Discord verification and temporary signups.",
+    bodyTail: "Many users search for temp mail for Discord to receive one-time codes without exposing personal email.",
   },
   {
-    slug: "temp-email-generator",
-    lang: "en",
-    title: "Temp Email Generator",
-    description:
-      "Quantum Mail is a temp email generator that creates secure disposable inboxes in seconds.",
-    body:
-      "Temp email generators are ideal for online forms, app testing, and protecting your main email address.",
+    slug: "for-instagram",
+    label: "for Instagram",
+    descriptionTail: "Useful for Instagram signups and temporary account testing.",
+    bodyTail: "Instagram-related temporary email searches are common among users who want more privacy.",
   },
   {
-    slug: "secure-temp-mail",
-    lang: "en",
-    title: "Secure Temp Mail",
-    description:
-      "Get secure temp mail with Quantum Mail and receive emails privately in your browser.",
-    body:
-      "Secure temp mail helps users reduce spam exposure while staying anonymous online.",
+    slug: "for-facebook",
+    label: "for Facebook",
+    descriptionTail: "Use it for Facebook registration and one-time verification messages.",
+    bodyTail: "Temp email for Facebook is a common use case for avoiding marketing emails in a main inbox.",
   },
   {
-    slug: "fake-email-generator",
-    lang: "en",
-    title: "Fake Email Generator",
-    description:
-      "Generate a fake email address instantly with Quantum Mail for testing, verification, and privacy.",
-    body:
-      "Fake email generators are commonly used to avoid exposing personal inboxes during signups.",
+    slug: "for-tiktok",
+    label: "for TikTok",
+    descriptionTail: "Receive TikTok signup and verification emails instantly.",
+    bodyTail: "TikTok users often rely on disposable inboxes for quick account creation and verification.",
   },
   {
-    slug: "throwaway-email",
-    lang: "en",
-    title: "Throwaway Email",
-    description:
-      "Use a throwaway email address to receive messages temporarily and keep your real inbox clean.",
-    body:
-      "Throwaway email is perfect for one-time online actions where long-term email access is not necessary.",
+    slug: "for-verification",
+    label: "for Verification",
+    descriptionTail: "Built for one-time codes, signup links, and email confirmations.",
+    bodyTail: "Verification-focused pages often perform well because they match strong user intent.",
   },
+  {
+    slug: "for-signup",
+    label: "for Signup",
+    descriptionTail: "Ideal for temporary account registration and signups.",
+    bodyTail: "Signup intent is one of the strongest SEO categories for temporary email tools.",
+  },
+  {
+    slug: "for-testing",
+    label: "for Testing",
+    descriptionTail: "Useful for QA, product testing, and workflow validation.",
+    bodyTail: "Testing-related searches attract developers, QA teams, and users who need disposable inboxes.",
+  },
+  {
+    slug: "no-signup",
+    label: "No Signup",
+    descriptionTail: "No registration required. Open and use instantly.",
+    bodyTail: "No-signup search intent converts well because it promises speed and low friction.",
+  },
+  {
+    slug: "online",
+    label: "Online",
+    descriptionTail: "Use it directly in your browser with no installation.",
+    bodyTail: "Online temp mail tools perform well in search because they are fast, simple, and immediate.",
+  },
+  {
+    slug: "free",
+    label: "Free",
+    descriptionTail: "Completely free to use with instant temporary inbox access.",
+    bodyTail: "Free temp email queries are high-volume and often bring broad organic traffic.",
+  }
+];
+
+const esBaseTopics: Topic[] = [
+  {
+    baseSlug: "correo-temporal",
+    keyword: "correo temporal",
+    titleBase: "Correo Temporal Gratis",
+    descriptionBase: "Genera un correo temporal gratis al instante con Quantum Mail.",
+    bodyBase: "El correo temporal ayuda a proteger tu bandeja principal y recibir mensajes sin exponer tu email real.",
+  },
+  {
+    baseSlug: "email-temporal",
+    keyword: "email temporal",
+    titleBase: "Email Temporal",
+    descriptionBase: "Crea un email temporal al instante para verificar cuentas y evitar spam.",
+    bodyBase: "El email temporal es útil para registros rápidos, pruebas y privacidad online.",
+  },
+  {
+    baseSlug: "correo-desechable",
+    keyword: "correo desechable",
+    titleBase: "Correo Desechable",
+    descriptionBase: "Usa un correo desechable para registrarte sin compartir tu correo principal.",
+    bodyBase: "Los correos desechables son muy útiles para formularios, registros y validaciones temporales.",
+  },
+  {
+    baseSlug: "correo-anonimo",
+    keyword: "correo anonimo",
+    titleBase: "Correo Anónimo",
+    descriptionBase: "Recibe mensajes con un correo anónimo temporal usando Quantum Mail.",
+    bodyBase: "El correo anónimo ayuda a proteger tu identidad y mantener tu privacidad en internet.",
+  },
+  {
+    baseSlug: "generador-email",
+    keyword: "generador de email",
+    titleBase: "Generador de Email Temporal",
+    descriptionBase: "Quantum Mail funciona como generador de email temporal gratis.",
+    bodyBase: "Un generador de email temporal crea bandejas rápidas para verificación, pruebas y uso desechable.",
+  },
+  {
+    baseSlug: "email-temporal-gratis",
+    keyword: "email temporal gratis",
+    titleBase: "Email Temporal Gratis",
+    descriptionBase: "Obtén un email temporal gratis y recibe mensajes al instante.",
+    bodyBase: "El email temporal gratis es una de las herramientas más útiles para evitar spam y proteger tu correo real.",
+  },
+  {
+    baseSlug: "correo-10-minutos",
+    keyword: "correo 10 minutos",
+    titleBase: "Correo de 10 Minutos",
+    descriptionBase: "Genera un correo de 10 minutos para verificaciones rápidas.",
+    bodyBase: "El correo de 10 minutos sirve para recibir mensajes rápidos y dejar que la bandeja expire automáticamente.",
+  }
+];
+
+const esModifiers: Modifier[] = [
+  {
+    slug: "para-discord",
+    label: "para Discord",
+    descriptionTail: "Perfecto para verificaciones y registros temporales en Discord.",
+    bodyTail: "Muchos usuarios buscan correo temporal para Discord para recibir códigos sin usar su correo personal.",
+  },
+  {
+    slug: "para-instagram",
+    label: "para Instagram",
+    descriptionTail: "Útil para crear cuentas o verificar registros en Instagram.",
+    bodyTail: "Instagram es una de las plataformas más buscadas junto con servicios de email temporal.",
+  },
+  {
+    slug: "para-facebook",
+    label: "para Facebook",
+    descriptionTail: "Recibe correos de verificación de Facebook sin compartir tu email real.",
+    bodyTail: "El correo temporal para Facebook es una búsqueda frecuente en usuarios que buscan privacidad.",
+  },
+  {
+    slug: "para-verificacion",
+    label: "para Verificación",
+    descriptionTail: "Ideal para códigos, enlaces y correos de confirmación.",
+    bodyTail: "La intención de verificación suele traer tráfico muy útil y bien orientado.",
+  },
+  {
+    slug: "para-registro",
+    label: "para Registro",
+    descriptionTail: "Úsalo para registros rápidos en páginas web y apps.",
+    bodyTail: "El correo temporal para registro es una de las búsquedas más naturales dentro de esta categoría.",
+  },
+  {
+    slug: "gratis",
+    label: "Gratis",
+    descriptionTail: "Sin costo y disponible al instante desde tu navegador.",
+    bodyTail: "Las búsquedas con la palabra gratis suelen tener alto volumen y buen potencial SEO.",
+  },
+  {
+    slug: "sin-registro",
+    label: "sin Registro",
+    descriptionTail: "No requiere cuenta, instalación ni registro previo.",
+    bodyTail: "Las herramientas sin registro suelen atraer usuarios por su rapidez y facilidad de uso.",
+  },
+  {
+    slug: "online",
+    label: "Online",
+    descriptionTail: "Disponible online y lista para usar en segundos.",
+    bodyTail: "La intención online suele funcionar bien porque promete acceso inmediato.",
+  }
+];
+
+function createBaseRoutes(topics: Topic[], lang: "en" | "es"): SEORoute[] {
+  return topics.map((topic) => ({
+    slug: topic.baseSlug,
+    lang,
+    title: topic.titleBase,
+    description: topic.descriptionBase,
+    body: topic.bodyBase,
+  }));
+}
+
+function createExpandedRoutes(
+  topics: Topic[],
+  modifiers: Modifier[],
+  lang: "en" | "es"
+): SEORoute[] {
+  const routes: SEORoute[] = [];
+
+  for (const topic of topics) {
+    for (const modifier of modifiers) {
+      routes.push({
+        slug: `${topic.baseSlug}-${modifier.slug}`,
+        lang,
+        title: `${topic.titleBase} ${modifier.label}`,
+        description: `${topic.descriptionBase} ${modifier.descriptionTail}`,
+        body: `${topic.bodyBase} ${modifier.bodyTail}`,
+      });
+    }
+  }
+
+  return routes;
+}
+
+const manualExtraRoutes: SEORoute[] = [
   {
     slug: "temporary-inbox",
     lang: "en",
     title: "Temporary Inbox Online",
     description:
-      "Create a temporary inbox online with Quantum Mail and receive emails instantly without signup.",
+      "Create a temporary inbox online with Quantum Mail and receive messages instantly.",
     body:
-      "Temporary inbox tools help users receive verification messages safely and anonymously.",
+      "Temporary inbox tools help users receive emails quickly without exposing a permanent address.",
   },
   {
     slug: "one-time-email",
     lang: "en",
     title: "One Time Email Address",
     description:
-      "Get a one time email address instantly using Quantum Mail for fast and private signups.",
+      "Use a one time email address for signups, verification, and disposable inbox access.",
     body:
-      "One time email addresses are useful when you only need to receive one or two emails.",
+      "One-time email pages match users who only need to receive one or two temporary messages.",
   },
   {
-    slug: "email-for-verification",
+    slug: "throwaway-email",
     lang: "en",
-    title: "Temporary Email for Verification",
+    title: "Throwaway Email",
     description:
-      "Use Quantum Mail as a temporary email for verification codes and signup emails.",
+      "Generate a throwaway email address instantly with Quantum Mail.",
     body:
-      "Verification emails are one of the main reasons users choose temp mail services.",
-  },
-  {
-    slug: "no-signup-email",
-    lang: "en",
-    title: "No Signup Email",
-    description:
-      "Get an instant no signup email inbox with Quantum Mail and receive messages right away.",
-    body:
-      "No signup email tools are popular because they remove friction and improve privacy.",
-  },
-
-  {
-    slug: "correo-temporal",
-    lang: "es",
-    title: "Correo Temporal Gratis",
-    description:
-      "Genera un correo temporal gratis al instante con Quantum Mail. Recibe emails sin usar tu correo real.",
-    body:
-      "El correo temporal es ideal para registros rápidos, verificación de cuentas y protección contra spam.",
-  },
-  {
-    slug: "email-temporal",
-    lang: "es",
-    title: "Email Temporal",
-    description:
-      "Crea un email temporal al instante con Quantum Mail y protege tu privacidad en internet.",
-    body:
-      "Un email temporal te ayuda a recibir mensajes sin exponer tu bandeja principal.",
-  },
-  {
-    slug: "correo-desechable",
-    lang: "es",
-    title: "Correo Desechable",
-    description:
-      "Usa un correo desechable para registrarte online y evitar spam en tu email principal.",
-    body:
-      "Los correos desechables son una solución práctica para validaciones y registros temporales.",
-  },
-  {
-    slug: "correo-anonimo",
-    lang: "es",
-    title: "Correo Anónimo",
-    description:
-      "Recibe mensajes con un correo anónimo temporal usando Quantum Mail.",
-    body:
-      "El correo anónimo te permite navegar y registrarte con más privacidad y menos exposición.",
-  },
-  {
-    slug: "generador-email",
-    lang: "es",
-    title: "Generador de Email Temporal",
-    description:
-      "Quantum Mail es un generador de email temporal que crea direcciones desechables al instante.",
-    body:
-      "Un generador de email es útil para pruebas, verificaciones y protección de tu bandeja personal.",
-  },
-  {
-    slug: "email-temporal-gratis",
-    lang: "es",
-    title: "Email Temporal Gratis",
-    description:
-      "Obtén un email temporal gratis y recibe mensajes sin registro con Quantum Mail.",
-    body:
-      "El email temporal gratis es una de las herramientas más prácticas para evitar spam.",
-  },
-  {
-    slug: "correo-10-minutos",
-    lang: "es",
-    title: "Correo de 10 Minutos",
-    description:
-      "Genera un correo de 10 minutos para recibir mensajes rápidos y dejar que expire automáticamente.",
-    body:
-      "El correo de 10 minutos es ideal para verificaciones rápidas y cuentas de uso temporal.",
+      "Throwaway email tools are commonly used for short-lived signups and quick web testing.",
   },
   {
     slug: "buzon-temporal",
     lang: "es",
     title: "Buzón Temporal",
     description:
-      "Crea un buzón temporal para recibir emails de forma anónima y segura.",
+      "Crea un buzón temporal para recibir mensajes sin comprometer tu correo personal.",
     body:
-      "Un buzón temporal te da acceso a una bandeja rápida sin comprometer tu correo real.",
-  },
-  {
-    slug: "email-para-verificacion",
-    lang: "es",
-    title: "Email Temporal para Verificación",
-    description:
-      "Usa Quantum Mail como email temporal para verificación de cuentas, registros y códigos.",
-    body:
-      "Los emails de verificación son uno de los casos de uso más comunes del correo temporal.",
+      "Un buzón temporal es útil para recibir verificaciones y mantener limpia tu bandeja principal.",
   },
   {
     slug: "correo-provisional",
     lang: "es",
     title: "Correo Provisional",
     description:
-      "Consigue un correo provisional gratis para recibir mensajes de corta duración.",
+      "Consigue un correo provisional gratis para validaciones y registros rápidos.",
     body:
-      "El correo provisional sirve para registros rápidos, pruebas y validaciones online.",
-  },
-  {
-    slug: "email-descartable",
-    lang: "es",
-    title: "Email Descartable",
-    description:
-      "Genera un email descartable para proteger tu correo personal y evitar spam.",
-    body:
-      "Un email descartable es una alternativa útil para usar servicios online de forma temporal.",
-  },
-  {
-    slug: "correo-anti-spam",
-    lang: "es",
-    title: "Correo Anti Spam",
-    description:
-      "Usa un correo anti spam temporal para registrarte sin ensuciar tu bandeja principal.",
-    body:
-      "El correo temporal ayuda a reducir correos promocionales y mensajes no deseados.",
+      "El correo provisional funciona muy bien para tareas puntuales donde no quieres usar tu email real.",
   },
   {
     slug: "email-anonimo",
     lang: "es",
     title: "Email Anónimo",
     description:
-      "Crea un email anónimo temporal con Quantum Mail para proteger tu identidad.",
+      "Crea un email anónimo temporal para recibir mensajes con más privacidad.",
     body:
-      "El email anónimo es útil cuando necesitas más privacidad al navegar o registrarte online.",
-  },
-  {
-    slug: "generador-de-correo-temporal",
-    lang: "es",
-    title: "Generador de Correo Temporal",
-    description:
-      "Quantum Mail funciona como generador de correo temporal gratis y sin registro.",
-    body:
-      "Un generador de correo temporal crea direcciones rápidas y desechables para usos puntuales.",
+      "El email anónimo ayuda a reducir spam y a proteger tu identidad al registrarte online.",
   }
 ];
+
+export const seoRoutes: SEORoute[] = [
+  ...createBaseRoutes(enBaseTopics, "en"),
+  ...createExpandedRoutes(enBaseTopics, enModifiers, "en"),
+  ...createBaseRoutes(esBaseTopics, "es"),
+  ...createExpandedRoutes(esBaseTopics, esModifiers, "es"),
+  ...manualExtraRoutes,
+];
+
+// elimina duplicados por slug por seguridad
+export const uniqueSeoRoutes: SEORoute[] = Array.from(
+  new Map(seoRoutes.map((route) => [route.slug, route])).values()
+);
