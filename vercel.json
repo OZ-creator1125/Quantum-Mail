@@ -9,7 +9,11 @@
       "destination": "/sitemap.xml"
     },
     {
-      "source": "/((?!robots.txt|sitemap.xml).*)",
+      "source": "/monetag_verify_:file*.html",
+      "destination": "/monetag_verify_:file*.html"
+    },
+    {
+      "source": "/((?!robots.txt|sitemap.xml|monetag_verify_.*\\.html).*)",
       "destination": "/"
     }
   ]
