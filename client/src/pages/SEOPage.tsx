@@ -1,89 +1,58 @@
-import { useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
-import Home from "./Home";
-import { uniqueSeoRoutes } from "@shared/seo-routes";
+import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
-function upsertMeta(name: string, content: string, property = false) {
-  const selector = property
-    ? `meta[property="${name}"]`
-    : `meta[name="${name}"]`;
+type SeoPageProps = {
+  title: string;
+  description: string;
+};
 
-  let tag = document.head.querySelector(selector) as HTMLMetaElement | null;
-
-  if (!tag) {
-    tag = document.createElement("meta");
-    if (property) {
-      tag.setAttribute("property", name);
-    } else {
-      tag.setAttribute("name", name);
-    }
-    document.head.appendChild(tag);
-  }
-
-  tag.setAttribute("content", content);
-}
-
-function upsertCanonical(href: string) {
-  let link = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
-
-  if (!link) {
-    link = document.createElement("link");
-    link.setAttribute("rel", "canonical");
-    document.head.appendChild(link);
-  }
-
-  link.setAttribute("href", href);
-}
-
-export default function SEOPage() {
-  const { slug } = useParams();
-
-  const page = useMemo(() => {
-    return uniqueSeoRoutes.find((item) => item.slug === slug);
-  }, [slug]);
-
+export default function SeoPage({ title, description }: SeoPageProps) {
   useEffect(() => {
-    const fallbackTitle = "Quantum Mail – Free Temporary Email Generator";
-    const fallbackDescription =
-      "Generate a free temporary email instantly. Protect your privacy and receive verification emails anonymously with Quantum Mail.";
-
-    const title = page?.title || fallbackTitle;
-    const description = page?.description || fallbackDescription;
-    const url = page
-      ? `https://qmailtemp.com/${page.slug}`
-      : "https://qmailtemp.com/";
+    const previousTitle = document.title;
+    const previousDescription =
+      document.querySelector('meta[name="description"]')?.getAttribute("content") || "";
 
     document.title = title;
 
-    upsertMeta("description", description);
-    upsertMeta("robots", "index, follow, max-image-preview:large");
-    upsertMeta("og:title", title, true);
-    upsertMeta("og:description", description, true);
-    upsertMeta("og:url", url, true);
-    upsertMeta("twitter:title", title);
-    upsertMeta("twitter:description", description);
-    upsertCanonical(url);
-  }, [page]);
+    let meta = document.querySelector('meta[name="description"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "description";
+      document.head.appendChild(meta);
+    }
+    meta.content = description;
 
-  if (!page) {
-    return <Home />;
-  }
+    return () => {
+      document.title = previousTitle;
+      if (meta) meta.content = previousDescription;
+    };
+  }, [title, description]);
 
   return (
-    <>
-      <Home />
+    <div className="qm-shell min-h-screen">
+      <div className="qm-wrap">
+        <section className="qm-about">
+          <h1 className="qm-about__title" style={{ fontSize: "2rem", marginBottom: 16 }}>
+            {title}
+          </h1>
 
-      <div className="qm-shell" style={{ paddingTop: 0 }}>
-        <div className="qm-wrap">
-          <section className="qm-about">
-            <h2 className="qm-about__title">{page.title}</h2>
-            <p className="qm-about__text">{page.description}</p>
-            <p className="qm-about__text" style={{ marginTop: 14 }}>
-              {page.body}
-            </p>
-          </section>
-        </div>
+          <p className="qm-about__text">{description}</p>
+
+          <div style={{ marginTop: 28 }}>
+            <Link
+              to="/"
+              className="qm-about__text"
+              style={{
+                textDecoration: "none",
+                color: "rgba(0,255,200,0.9)",
+                fontWeight: 600,
+              }}
+            >
+              Generate Temporary Email →
+            </Link>
+          </div>
+        </section>
       </div>
-    </>
+    </div>
   );
 }
