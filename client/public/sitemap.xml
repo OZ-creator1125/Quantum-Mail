@@ -2,96 +2,54 @@
 
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-  <!-- HOME -->
+<url>
+<loc>https://qmailtemp.com/</loc>
+<changefreq>daily</changefreq>
+<priority>1.0</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/</loc>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/privacy</loc>
+<changefreq>monthly</changefreq>
+<priority>0.4</priority>
+</url>
 
-  <!-- SEO PAGES -->
+<url>
+<loc>https://qmailtemp.com/terms</loc>
+<changefreq>monthly</changefreq>
+<priority>0.4</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/temp-mail</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/contact</loc>
+<changefreq>monthly</changefreq>
+<priority>0.4</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/temporary-email</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+<!-- SEO pages -->
 
-  <url>
-    <loc>https://qmailtemp.com/10-minute-email</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/temporary-email-generator</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/fake-email-generator</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/temp-mail-for-verification</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/disposable-email</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/fake-email-generator</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
 
-  <url>
-    <loc>https://qmailtemp.com/burner-email</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://qmailtemp.com/anonymous-email</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://qmailtemp.com/free-temp-mail</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- SEO ESPAÑOL -->
-
-  <url>
-    <loc>https://qmailtemp.com/correo-temporal</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <url>
-    <loc>https://qmailtemp.com/email-temporal</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-
-  <!-- LEGAL -->
-
-  <url>
-    <loc>https://qmailtemp.com/privacy</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://qmailtemp.com/terms</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-
-  <url>
-    <loc>https://qmailtemp.com/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
+<url>
+<loc>https://qmailtemp.com/10-minute-email</loc>
+<changefreq>weekly</changefreq>
+<priority>0.8</priority>
+</url>
 
 </urlset>
