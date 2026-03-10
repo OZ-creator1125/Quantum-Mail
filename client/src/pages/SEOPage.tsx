@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import Home from "./Home";
-import { seoRoutes } from "@shared/seo-routes";
+import { uniqueSeoRoutes } from "@shared/seo-routes";
 
 function upsertMeta(name: string, content: string, property = false) {
   const selector = property
@@ -39,7 +39,7 @@ export default function SEOPage() {
   const { slug } = useParams();
 
   const page = useMemo(() => {
-    return seoRoutes.find((item) => item.slug === slug);
+    return uniqueSeoRoutes.find((item) => item.slug === slug);
   }, [slug]);
 
   useEffect(() => {
