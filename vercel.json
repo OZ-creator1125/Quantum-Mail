@@ -9,11 +9,11 @@
       "destination": "/sitemap.xml"
     },
     {
-      "source": "/monetag_verify_:file*.html",
-      "destination": "/monetag_verify_:file*.html"
+      "source": "/sw.js",
+      "destination": "/sw.js"
     },
     {
-      "source": "/((?!robots.txt|sitemap.xml|monetag_verify_.*\\.html).*)",
+      "source": "/((?!robots.txt|sitemap.xml|sw\\.js).*)",
       "destination": "/"
     }
   ]
