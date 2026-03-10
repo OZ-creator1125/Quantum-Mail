@@ -1,12 +1,59 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { mkdir, writeFile } from "node:fs/promises";
 import { metaImagesPlugin } from "./vite-plugin-meta-images";
+import { uniqueSeoRoutes } from "./shared/seo-routes";
+
+function generateSitemapPlugin(): Plugin {
+  return {
+    name: "generate-sitemap",
+    async buildStart() {
+      const publicDir = path.resolve(import.meta.dirname, "client", "public");
+      const sitemapPath = path.resolve(publicDir, "sitemap.xml");
+
+      await mkdir(publicDir, { recursive: true });
+
+      const staticUrls = [
+        { loc: "https://qmailtemp.com/", priority: "1.0", changefreq: "daily" },
+        { loc: "https://qmailtemp.com/privacy", priority: "0.4", changefreq: "monthly" },
+        { loc: "https://qmailtemp.com/terms", priority: "0.4", changefreq: "monthly" },
+        { loc: "https://qmailtemp.com/contact", priority: "0.4", changefreq: "monthly" },
+      ];
+
+      const dynamicUrls = uniqueSeoRoutes.map((route) => ({
+        loc: `https://qmailtemp.com/${route.slug}`,
+        priority: route.lang === "es" ? "0.8" : "0.9",
+        changefreq: "weekly",
+      }));
+
+      const urls = [...staticUrls, ...dynamicUrls];
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls
+  .map(
+    (url) => `  <url>
+    <loc>${url.loc}</loc>
+    <changefreq>${url.changefreq}</changefreq>
+    <priority>${url.priority}</priority>
+  </url>`
+  )
+  .join("\n")}
+</urlset>
+`;
+
+      await writeFile(sitemapPath, xml, "utf8");
+      console.log(`✅ sitemap generado: ${sitemapPath}`);
+    },
+  };
+}
 
 export default defineConfig({
   plugins: [
     react(),
     metaImagesPlugin(),
+    generateSitemapPlugin(),
   ],
   resolve: {
     alias: {
