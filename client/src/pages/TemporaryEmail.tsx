@@ -1,8 +1,8 @@
-import SeoPage from "../../components/SeoPage";
+import SEOPage from "./SEOPage";
 
 export default function TemporaryEmail() {
   return (
-    <SeoPage
+    <SEOPage
       title="Temporary Email – Anonymous Disposable Inbox"
       description="Create a temporary email address instantly with Quantum Mail. Receive verification emails, avoid spam, and keep your personal inbox private."
     />
