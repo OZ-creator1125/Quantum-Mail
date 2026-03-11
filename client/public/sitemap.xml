@@ -4,6 +4,7 @@
 
 <url>
 <loc>https://qmailtemp.com/</loc>
+<lastmod>2026-03-10</lastmod>
 <changefreq>daily</changefreq>
 <priority>1.0</priority>
 </url>
@@ -11,45 +12,77 @@
 <url>
 <loc>https://qmailtemp.com/privacy</loc>
 <changefreq>monthly</changefreq>
-<priority>0.4</priority>
+<priority>0.3</priority>
 </url>
 
 <url>
 <loc>https://qmailtemp.com/terms</loc>
 <changefreq>monthly</changefreq>
-<priority>0.4</priority>
+<priority>0.3</priority>
 </url>
 
 <url>
 <loc>https://qmailtemp.com/contact</loc>
 <changefreq>monthly</changefreq>
-<priority>0.4</priority>
+<priority>0.3</priority>
 </url>
 
-<!-- SEO pages -->
+<!-- CORE TEMP MAIL -->
 
-<url>
-<loc>https://qmailtemp.com/temporary-email-generator</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
+<url><loc>https://qmailtemp.com/temp-mail</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-generator</loc></url>
+<url><loc>https://qmailtemp.com/temporary-email</loc></url>
+<url><loc>https://qmailtemp.com/temporary-email-generator</loc></url>
+<url><loc>https://qmailtemp.com/disposable-email</loc></url>
+<url><loc>https://qmailtemp.com/disposable-email-address</loc></url>
+<url><loc>https://qmailtemp.com/free-temp-mail</loc></url>
+<url><loc>https://qmailtemp.com/free-temporary-email</loc></url>
+<url><loc>https://qmailtemp.com/fake-email</loc></url>
+<url><loc>https://qmailtemp.com/fake-email-generator</loc></url>
+<url><loc>https://qmailtemp.com/fake-email-for-verification</loc></url>
+<url><loc>https://qmailtemp.com/burner-email</loc></url>
+<url><loc>https://qmailtemp.com/anonymous-email</loc></url>
 
-<url>
-<loc>https://qmailtemp.com/temp-mail-for-verification</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
+<!-- VERIFICATION -->
 
-<url>
-<loc>https://qmailtemp.com/fake-email-generator</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
+<url><loc>https://qmailtemp.com/temp-mail-for-verification</loc></url>
+<url><loc>https://qmailtemp.com/email-for-verification</loc></url>
+<url><loc>https://qmailtemp.com/temporary-email-for-verification</loc></url>
+<url><loc>https://qmailtemp.com/temp-email-for-signup</loc></url>
+<url><loc>https://qmailtemp.com/email-for-registration</loc></url>
+<url><loc>https://qmailtemp.com/temp-email-for-confirmation</loc></url>
+<url><loc>https://qmailtemp.com/temp-email-for-login</loc></url>
 
-<url>
-<loc>https://qmailtemp.com/10-minute-email</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
+<!-- SOCIAL MEDIA -->
+
+<url><loc>https://qmailtemp.com/temp-mail-for-facebook</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-instagram</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-twitter</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-tiktok</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-discord</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-telegram</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-reddit</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-youtube</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-netflix</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-amazon</loc></url>
+<url><loc>https://qmailtemp.com/temp-mail-for-paypal</loc></url>
+
+<!-- TECH / API -->
+
+<url><loc>https://qmailtemp.com/temp-mail-api</loc></url>
+<url><loc>https://qmailtemp.com/api-temp-mail</loc></url>
+<url><loc>https://qmailtemp.com/test-email-generator</loc></url>
+<url><loc>https://qmailtemp.com/email-testing-tool</loc></url>
+
+<!-- ESPAÑOL -->
+
+<url><loc>https://qmailtemp.com/correo-temporal</loc></url>
+<url><loc>https://qmailtemp.com/correo-temporal-gratis</loc></url>
+<url><loc>https://qmailtemp.com/generador-de-correo-temporal</loc></url>
+<url><loc>https://qmailtemp.com/email-temporal</loc></url>
+<url><loc>https://qmailtemp.com/correo-desechable</loc></url>
+<url><loc>https://qmailtemp.com/correo-anonimo</loc></url>
+<url><loc>https://qmailtemp.com/correo-temporal-para-registro</loc></url>
+<url><loc>https://qmailtemp.com/email-temporal-gratis</loc></url>
 
 </urlset>
