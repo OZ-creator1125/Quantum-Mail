@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 import { mkdir, writeFile } from "node:fs/promises";
 import { metaImagesPlugin } from "./vite-plugin-meta-images";
-import { uniqueSeoRoutes } from "./shared/seo-routes";
+import { seoPages } from "./client/src/lib/seoPages";
 
 function generateSitemapPlugin(): Plugin {
   return {
@@ -16,14 +16,14 @@ function generateSitemapPlugin(): Plugin {
 
       const staticUrls = [
         { loc: "https://qmailtemp.com/", priority: "1.0", changefreq: "daily" },
-        { loc: "https://qmailtemp.com/privacy", priority: "0.4", changefreq: "monthly" },
-        { loc: "https://qmailtemp.com/terms", priority: "0.4", changefreq: "monthly" },
-        { loc: "https://qmailtemp.com/contact", priority: "0.4", changefreq: "monthly" },
+        { loc: "https://qmailtemp.com/privacy", priority: "0.3", changefreq: "monthly" },
+        { loc: "https://qmailtemp.com/terms", priority: "0.3", changefreq: "monthly" },
+        { loc: "https://qmailtemp.com/contact", priority: "0.3", changefreq: "monthly" },
       ];
 
-      const dynamicUrls = uniqueSeoRoutes.map((route) => ({
-        loc: `https://qmailtemp.com/${route.slug}`,
-        priority: route.lang === "es" ? "0.8" : "0.9",
+      const dynamicUrls = seoPages.map((page) => ({
+        loc: `https://qmailtemp.com/${page.slug}`,
+        priority: "0.8",
         changefreq: "weekly",
       }));
 
