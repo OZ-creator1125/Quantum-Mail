@@ -8,11 +8,11 @@ import { seoPages } from "./client/src/lib/seoPages";
 function generateSitemapPlugin(): Plugin {
   return {
     name: "generate-sitemap",
-    async buildStart() {
-      const publicDir = path.resolve(import.meta.dirname, "client", "public");
-      const sitemapPath = path.resolve(publicDir, "sitemap.xml");
+    async closeBundle() {
+      const outDir = path.resolve(import.meta.dirname, "dist", "public");
+      const sitemapPath = path.resolve(outDir, "sitemap.xml");
 
-      await mkdir(publicDir, { recursive: true });
+      await mkdir(outDir, { recursive: true });
 
       const staticUrls = [
         { loc: "https://qmailtemp.com/", priority: "1.0", changefreq: "daily" },
@@ -69,7 +69,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname, "client"),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "dist", "public"),
     emptyOutDir: true,
   },
   server: {
