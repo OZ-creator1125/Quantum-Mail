@@ -1,23 +1,27 @@
-let emails: any[] = [];
-
-export default function handler(req: any, res: any) {
-
+export default async function handler(req: any, res: any) {
   if (req.method === "POST") {
-    const data = req.body;
+    try {
+      const email = req.body;
 
-    emails.unshift({
-      ...data,
-      id: Date.now()
-    });
+      console.log("EMAIL_RECIBIDO", email);
 
-    console.log("📩 EMAIL GUARDADO:", data);
+      return res.status(200).json({
+        ok: true,
+        message: "Email recibido correctamente",
+        data: email
+      });
 
-    return res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error("ERROR:", error);
+      return res.status(500).json({
+        ok: false,
+        error: "Error procesando email"
+      });
+    }
   }
 
-  if (req.method === "GET") {
-    return res.status(200).json(emails);
-  }
-
-  return res.status(405).json({ error: "Method not allowed" });
+  return res.status(200).json({
+    ok: true,
+    message: "API inbox activa 🚀"
+  });
 }
