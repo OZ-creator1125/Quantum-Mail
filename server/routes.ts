@@ -1,96 +1,55 @@
-const Imap = require("imap");
-const { simpleParser } = require("mailparser");
+import express from "express";
 
-export async function registerRoutes(httpServer: any, app: any): Promise<any> {
-  app.get("/api/inbox", async (_req: any, res: any) => {
-    try {
-      const imap = new Imap({
-        user: process.env.GMAIL_IMAP_USER || "",
-        password: process.env.GMAIL_IMAP_PASSWORD || "",
-        host: process.env.GMAIL_IMAP_HOST || "imap.gmail.com",
-        port: Number(process.env.GMAIL_IMAP_PORT || 993),
-        tls: true,
-        tlsOptions: { rejectUnauthorized: false },
-      });
+const router = express.Router();
 
-      const messages: any[] = [];
+// 🔥 almacenamiento en memoria (simple y gratis)
+let emails: any[] = [];
 
-      imap.once("ready", () => {
-        imap.openBox("INBOX", false, (openErr: any) => {
-          if (openErr) {
-            imap.end();
-            return res
-              .status(500)
-              .json({ error: "No se pudo abrir INBOX", details: String(openErr) });
-          }
+/**
+ * 📥 Recibir emails desde Cloudflare Worker
+ */
+router.post("/api/inbox", (req, res) => {
+  try {
+    const data = req.body;
 
-          imap.search(["ALL"], (searchErr: any, results: number[]) => {
-            if (searchErr) {
-              imap.end();
-              return res
-                .status(500)
-                .json({ error: "Error buscando correos", details: String(searchErr) });
-            }
-
-            if (!results || results.length === 0) {
-              imap.end();
-              return res.json([]);
-            }
-
-            const latest = results.slice(-10);
-            const fetcher = imap.fetch(latest, { bodies: "" });
-
-            fetcher.on("message", (msg: any) => {
-              msg.on("body", (stream: any) => {
-                simpleParser(stream, (parseErr: any, parsed: any) => {
-                  if (parseErr) return;
-
-                  messages.push({
-                    from: parsed?.from?.text || "",
-                    subject: parsed?.subject || "",
-                    text: parsed?.text || "",
-                    date: parsed?.date || undefined,
-                  });
-                });
-              });
-            });
-
-            fetcher.once("error", (fetchErr: any) => {
-              imap.end();
-              return res
-                .status(500)
-                .json({ error: "Error leyendo correos", details: String(fetchErr) });
-            });
-
-            fetcher.once("end", () => {
-              imap.end();
-
-              const ordered = messages.sort((a, b) => {
-                const da = a.date ? new Date(a.date).getTime() : 0;
-                const db = b.date ? new Date(b.date).getTime() : 0;
-                return db - da;
-              });
-
-              return res.json(ordered);
-            });
-          });
-        });
-      });
-
-      imap.once("error", (err: any) => {
-        return res
-          .status(500)
-          .json({ error: "Error de conexión IMAP", details: String(err) });
-      });
-
-      imap.connect();
-    } catch (error: any) {
-      return res.status(500).json({
-        error: "Error leyendo correos",
-        details: String(error),
-      });
+    if (!data) {
+      return res.status(400).json({ error: "No data received" });
     }
-  });
 
-  return httpServer;
-}
+    // Guardar al inicio (más nuevo arriba)
+    emails.unshift({
+      ...data,
+      id: Date.now()
+    });
+
+    console.log("📩 EMAIL GUARDADO:", data);
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error("❌ ERROR AL GUARDAR EMAIL:", error);
+    return res.status(500).json({ error: "Error saving email" });
+  }
+});
+
+/**
+ * 📤 Obtener todos los emails
+ */
+router.get("/api/inbox", (req, res) => {
+  try {
+    return res.json(emails);
+  } catch (error) {
+    console.error("❌ ERROR AL OBTENER EMAILS:", error);
+    return res.status(500).json({ error: "Error fetching emails" });
+  }
+});
+
+/**
+ * 🧹 Limpiar inbox (opcional)
+ */
+router.delete("/api/inbox", (req, res) => {
+  emails = [];
+  console.log("🗑️ Inbox limpiado");
+  return res.json({ ok: true });
+});
+
+export default router;
