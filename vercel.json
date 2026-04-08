@@ -1,20 +1,6 @@
 {
   "rewrites": [
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/sw.js",
-      "destination": "/sw.js"
-    },
-    {
-      "source": "/((?!robots.txt|sitemap.xml|sw\\.js).*)",
-      "destination": "/"
-    }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/(.*)", "destination": "/client/$1" }
   ]
 }
