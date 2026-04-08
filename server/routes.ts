@@ -2,7 +2,7 @@ import express from "express";
 
 const router = express.Router();
 
-// 🔥 almacenamiento en memoria (simple y gratis)
+// 🔥 almacenamiento en memoria
 let emails: any[] = [];
 
 /**
@@ -16,7 +16,6 @@ router.post("/api/inbox", (req, res) => {
       return res.status(400).json({ error: "No data received" });
     }
 
-    // Guardar al inicio (más nuevo arriba)
     emails.unshift({
       ...data,
       id: Date.now()
@@ -25,6 +24,7 @@ router.post("/api/inbox", (req, res) => {
     console.log("📩 EMAIL GUARDADO:", data);
 
     return res.json({ ok: true });
+
   } catch (error) {
     console.error("❌ ERROR AL GUARDAR EMAIL:", error);
     return res.status(500).json({ error: "Error saving email" });
@@ -32,23 +32,17 @@ router.post("/api/inbox", (req, res) => {
 });
 
 /**
- * 📤 Obtener todos los emails
+ * 📤 Obtener inbox
  */
 router.get("/api/inbox", (req, res) => {
-  try {
-    return res.json(emails);
-  } catch (error) {
-    console.error("❌ ERROR AL OBTENER EMAILS:", error);
-    return res.status(500).json({ error: "Error fetching emails" });
-  }
+  return res.json(emails);
 });
 
 /**
- * 🧹 Limpiar inbox (opcional)
+ * 🧹 Limpiar inbox
  */
 router.delete("/api/inbox", (req, res) => {
   emails = [];
-  console.log("🗑️ Inbox limpiado");
   return res.json({ ok: true });
 });
 
