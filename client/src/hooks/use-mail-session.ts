@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { EmailMessage } from "../lib/mock-api";
-import { createSession } from "@/lib/api";
+import { createSession, getInbox, clearInbox } from "@/lib/api";
 
 type RealSession = { address: string; token: string };
 
@@ -32,6 +32,14 @@ export const useMailSession = () => {
     try {
       clearTimer();
 
+      if (currentEmail) {
+        try {
+          await clearInbox(currentEmail);
+        } catch (e) {
+          console.error("CLEAR OLD INBOX ERROR:", e);
+        }
+      }
+
       setCurrentEmail("");
       setToken("");
       setInbox([]);
@@ -58,10 +66,18 @@ export const useMailSession = () => {
     } finally {
       creatingRef.current = false;
     }
-  }, []);
+  }, [currentEmail]);
 
   const expireSession = useCallback(async () => {
     clearTimer();
+
+    if (currentEmail) {
+      try {
+        await clearInbox(currentEmail);
+      } catch (e) {
+        console.error("CLEAR EXPIRED INBOX ERROR:", e);
+      }
+    }
 
     setCurrentEmail("");
     setToken("");
@@ -70,11 +86,9 @@ export const useMailSession = () => {
     setIsPaused(false);
     setIsExpired(true);
 
-    // ✅ genera automáticamente un correo nuevo al expirar
     await createFreshSession();
-  }, [createFreshSession]);
+  }, [createFreshSession, currentEmail]);
 
-  // ✅ Cada vez que se abre la página/pestaña: correo nuevo e independiente
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
@@ -86,7 +100,6 @@ export const useMailSession = () => {
     };
   }, [createFreshSession]);
 
-  // ✅ Timer independiente por pestaña
   useEffect(() => {
     clearTimer();
 
@@ -104,7 +117,6 @@ export const useMailSession = () => {
     return () => clearTimer();
   }, [currentEmail, isPaused, isExpired]);
 
-  // ✅ Cuando llega a 0: limpia y crea uno nuevo
   useEffect(() => {
     if (!currentEmail) return;
     if (isExpired) return;
@@ -113,38 +125,25 @@ export const useMailSession = () => {
     expireSession();
   }, [timeLeft, currentEmail, isExpired, expireSession]);
 
-  // ✅ Polling inbox independiente por pestaña
   useEffect(() => {
-    if (!token || isPaused || isExpired) return;
+    if (!currentEmail || isPaused || isExpired) return;
 
     let cancelled = false;
 
     const tick = async () => {
       try {
-        const res = await fetch(
-          "https://tempmail-backend-production.up.railway.app/api/inbox",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const data = await res.json();
-        const list =
-          data?.messages ?? data?.["hydra:member"] ?? data?.data ?? [];
+        const list = await getInbox(currentEmail);
 
         if (!cancelled && Array.isArray(list)) {
           const mapped: EmailMessage[] = list.map((m: any) => ({
             id:
               m.id ??
-              m["@id"] ??
               `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-            sender: m?.from?.address ?? "unknown",
+            sender: m?.from ?? "unknown",
             subject: m?.subject ?? "(no subject)",
-            preview: m?.intro ?? "",
-            body: m?.text ?? m?.html ?? m?.intro ?? "",
-            timestamp: m?.createdAt ? new Date(m.createdAt) : new Date(),
+            preview: m?.body ? String(m.body).slice(0, 120) : "",
+            body: m?.body ?? "",
+            timestamp: m?.date ? new Date(m.date) : new Date(),
           }));
 
           setInbox(mapped);
@@ -161,7 +160,7 @@ export const useMailSession = () => {
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [token, isPaused, isExpired]);
+  }, [currentEmail, isPaused, isExpired]);
 
   const togglePause = () => setIsPaused((p) => !p);
 

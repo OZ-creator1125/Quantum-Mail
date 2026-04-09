@@ -1,23 +1,49 @@
-const API_BASE = "https://tempmail-backend-production.up.railway.app";
+const WORKER_BASE = "https://qmailtemp-inbox.coz-dita.workers.dev";
+
+function randomLocalPart(length = 10) {
+  return Math.random().toString(36).slice(2, 2 + length);
+}
 
 export async function createSession() {
-  const res = await fetch(`${API_BASE}/api/session/new`, { method: "POST" });
-  if (!res.ok) throw new Error(`session/new failed: ${res.status}`);
+  const address = `${randomLocalPart(10)}@qmailtemp.com`;
+
+  return {
+    address,
+    token: address,
+  };
+}
+
+export async function getInbox(addressOrToken: string) {
+  const email = addressOrToken;
+
+  const res = await fetch(
+    `${WORKER_BASE}/api/inbox?to=${encodeURIComponent(email)}`
+  );
+
+  if (!res.ok) {
+    throw new Error(`inbox failed: ${res.status}`);
+  }
+
   return res.json();
 }
 
-export async function getInbox(token: string) {
-  const res = await fetch(`${API_BASE}/api/inbox`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`inbox failed: ${res.status}`);
+export async function clearInbox(addressOrToken: string) {
+  const email = addressOrToken;
+
+  const res = await fetch(
+    `${WORKER_BASE}/api/clear?to=${encodeURIComponent(email)}`,
+    {
+      method: "POST",
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`clear failed: ${res.status}`);
+  }
+
   return res.json();
 }
 
-export async function getMessage(token: string, id: string) {
-  const res = await fetch(`${API_BASE}/api/message/${id}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`message failed: ${res.status}`);
-  return res.json();
+export async function getMessage(_token: string, _id: string) {
+  return null;
 }
